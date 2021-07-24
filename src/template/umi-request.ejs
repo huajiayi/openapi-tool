@@ -1,0 +1,62 @@
+import request from 'umi-request';
+import {
+  <%_ deps.forEach((dep) => { -%>
+  <%- dep %>,
+  <%_ }); -%>
+} from './typings';
+<% apis.forEach((api) => { %>
+/**
+ * <%- api.description %> <%- api.request.method %> <%- api.request.url %>
+ */
+export async function <%- api.name %> (
+  <%_ if(api.request.filter.path.length !== 0) { -%>
+  pathVars: {
+    <%_ api.request.filter.path.forEach((param) => { -%>
+    <%- param.name %><% if(!param.required) { %>?<% } %>: <%- param.type %>; // <%- param.description %>
+    <%_ }); -%>
+  },
+  <%_ } -%>
+  <%_ if(api.request.filter.query.length !== 0) { -%>
+  params: {
+    <%_ api.request.filter.query.forEach((param) => { -%>
+    <%- param.name %><% if(param.required) { %>?<% } %>: <%- param.type %>; // <%- param.description %>
+    <%_ }); -%>
+  },
+  <%_ } -%>
+  <%_ if(api.request.filter.body.length !== 0) { -%>
+  data: {
+    <%_ api.request.filter.body.forEach((param) => { -%>
+    <%- param.name %><% if(param.required) { %>?<% } %>: <%- param.type %>; // <%- param.description %>
+    <%_ }); -%>
+  },
+  <%_ } -%>
+  <%_ if(api.request.filter.formdata.length !== 0) { -%>
+  body: {
+    <%_ api.request.filter.formdata.forEach((param) => { -%>
+    <%- param.name %><% if(param.required) { %>?<% } %>: <%- param.type %>; // <%- param.description %>
+    <%_ }); -%>
+  },
+  <%_ } -%>
+  options?: Record<string, any>,
+) {
+  return request<<%- api.response.type %>>(<%- api.request.urlText %>, {
+    method: '<%- api.request.method %>',
+    <%_ if(api.request.filter.query.length !== 0) { -%>
+    params: {
+      ...params,
+    },
+    <%_ } -%>
+    <%_ if(api.request.filter.body.length !== 0) { -%>
+    data: {
+      ...data,
+    },
+    <%_ } -%>
+    <%_ if(api.request.filter.formdata.length !== 0) { -%>
+    body: {
+      ...body,
+    },
+    <%_ } -%>
+    ...(options || {}),
+  });
+}
+<% }); %>
