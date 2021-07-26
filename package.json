@@ -2,10 +2,10 @@
   "name": "openapi-tool",
   "version": "0.1.0",
   "description": "a tool to generate service file based on openapi(v2)",
-  "main": "dist/main.js",
+  "main": "dist/main.min.js",
   "scripts": {
-    "start": "node script/build.js && node example/main.js",
-    "build": "node script/build.js"
+    "test": "node example/main.js",
+    "start": "node script/build.js"
   },
   "author": "Joey Hua",
   "license": "MIT",
@@ -18,7 +18,7 @@
     "eslint-config-alloy": "^4.1.0",
     "rollup": "^2.53.2",
     "rollup-plugin-eslint": "^7.0.0",
-    "rollup-plugin-typescript": "^1.0.1",
+    "rollup-plugin-typescript2": "^0.30.0",
     "terser": "^5.7.1",
     "tslib": "^2.3.0",
     "typescript": "^4.3.5"
@@ -26,5 +26,18 @@
   "dependencies": {
     "ejs": "^3.1.6",
     "umi-request": "^1.3.9"
+  },
+  "keywords": [
+    "node",
+    "swagger",
+    "openapi"
+  ],
+  "bugs": {
+    "url": "https://github.com/huajiayi/openapi-tool/issues"
+  },
+  "homepage": "https://github.com/huajiayi/openapi-tool#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/huajiayi/openapi-tool.git"
   }
 }

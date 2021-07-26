@@ -1,5 +1,5 @@
 const path = require('path')
-const typescript = require('rollup-plugin-typescript')
+const typescript = require('rollup-plugin-typescript2')
 const { eslint } = require('rollup-plugin-eslint')
 
 const resolve = p => path.resolve(__dirname, '../', p)
@@ -31,7 +31,9 @@ function getConfig(name) {
       eslint({
         fix: true
       }),
-      typescript()
+      typescript({
+        tsconfig: resolve('./tsconfig.json'), // 导入本地ts配置
+      })
     ],
     external: ['umi-request', 'fs', 'ejs', 'path']
   }

@@ -5,6 +5,7 @@ import {
   getAllDeps,
   removeArraySign,
   removeGenericsSign,
+  report,
   toGenerics,
   toGenericsTypes,
 } from "./utils";
@@ -284,6 +285,7 @@ const generateService = async (data: Spec2, outputDir: string) => {
   const service = await renderFile(filePath, { types });
   const output = resolve(outputDir, "typings.ts");
   fs.writeFileSync(output, service);
+  report(output, service);
 
   const apis = getApis(data, types);
 
@@ -323,6 +325,7 @@ const generateService = async (data: Spec2, outputDir: string) => {
     const service = await renderFile(filePath, { deps, apis });
     const output = resolve(outputDir, `${tag}.ts`);
     fs.writeFileSync(output, service);
+    report(output, service);
   });
 };
 

@@ -10,6 +10,7 @@ function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'defau
 var request__default = /*#__PURE__*/_interopDefaultLegacy(request);
 var fs__default = /*#__PURE__*/_interopDefaultLegacy(fs);
 var ejs__default = /*#__PURE__*/_interopDefaultLegacy(ejs);
+var path__default = /*#__PURE__*/_interopDefaultLegacy(path);
 
 const getAllDeps = (type) => {
     return type.split('<').map(t => t.replace(/>/g, '').replace(/\[\]/g, ''));
@@ -25,6 +26,15 @@ const removeGenericsSign = (type) => {
 };
 const removeArraySign = (type) => {
     return type.replace(/\[\]/g, '');
+};
+const report = (dist, code) => {
+    console.log(blue(path__default['default'].relative(process.cwd(), dist)) + " " + getSize(code));
+};
+const getSize = (code) => {
+    return (code.length / 1024).toFixed(2) + "kb";
+};
+const blue = (str) => {
+    return "\x1b[1m\x1b[34m" + str + "\x1b[39m\x1b[22m";
 };
 
 const getType = (param, hasGenerics) => {
@@ -218,8 +228,10 @@ const renderFile = (file, data) => {
 const generateService = async (data, outputDir) => {
     const types = getTypes(data);
     const filePath = path.resolve(__dirname, "../", "src", "template", "type.ejs");
-    await renderFile(filePath, { types });
-    path.resolve(outputDir, "typings.ts");
+    const service = await renderFile(filePath, { types });
+    const output = path.resolve(outputDir, "typings.ts");
+    fs__default['default'].writeFileSync(output, service);
+    report(output, service);
     const apis = getApis(data, types);
     const tagMap = new Map();
     data.tags?.forEach((tag) => {
@@ -245,6 +257,7 @@ const generateService = async (data, outputDir) => {
         const service = await renderFile(filePath, { deps, apis });
         const output = path.resolve(outputDir, `${tag}.ts`);
         fs__default['default'].writeFileSync(output, service);
+        report(output, service);
     });
 };
 

@@ -1,0 +1,10 @@
+export declare const getAllDeps: (type: string) => string[];
+export declare const toGenericsTypes: (types: string) => string;
+export declare const toGenerics: (types: string[]) => string;
+export declare const removeGenericsSign: (type: string) => string;
+export declare const removeArraySign: (type: string) => string;
+export declare const isGenerics: (type: string) => boolean;
+export declare const report: (dist: string, code: string) => void;
+export declare const getSize: (code: string) => string;
+export declare const logError: (e: any) => void;
+export declare const blue: (str: string) => string;
