@@ -12,8 +12,8 @@ const builds = {
   },
   'full-prod': {
     input: resolve('src/main.ts'),
-    output: resolve('dist/main.min.js'),
-    format: 'cjs'
+    output: resolve('dist/main.esm.js'),
+    format: 'es'
   }
 }
 

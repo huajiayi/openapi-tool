@@ -1,18 +1,7 @@
-'use strict';
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-var request = require('umi-request');
-var fs = require('fs');
-var ejs = require('ejs');
-var path = require('path');
-
-function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
-
-var request__default = /*#__PURE__*/_interopDefaultLegacy(request);
-var fs__default = /*#__PURE__*/_interopDefaultLegacy(fs);
-var ejs__default = /*#__PURE__*/_interopDefaultLegacy(ejs);
-var path__default = /*#__PURE__*/_interopDefaultLegacy(path);
+import request from 'umi-request';
+import fs from 'fs';
+import ejs from 'ejs';
+import path, { resolve } from 'path';
 
 const getAllDeps = (type) => {
     return type.split('<').map(t => t.replace(/>/g, '').replace(/\[\]/g, ''));
@@ -30,7 +19,7 @@ const removeArraySign = (type) => {
     return type.replace(/\[\]/g, '');
 };
 const report = (dist, code) => {
-    console.log(blue(path__default['default'].relative(process.cwd(), dist)) + " " + getSize(code));
+    console.log(blue(path.relative(process.cwd(), dist)) + " " + getSize(code));
 };
 const getSize = (code) => {
     return (code.length / 1024).toFixed(2) + "kb";
@@ -228,7 +217,7 @@ const getTypes = (data) => {
 };
 const renderFile = (file, data) => {
     return new Promise((resolve, reject) => {
-        ejs__default['default'].renderFile(file, data, {}, (err, str) => {
+        ejs.renderFile(file, data, {}, (err, str) => {
             if (err) {
                 reject(err.message);
             }
@@ -238,10 +227,10 @@ const renderFile = (file, data) => {
 };
 const generateService$1 = async (data, outputDir) => {
     const types = getTypes(data);
-    const filePath = path.resolve(__dirname, "../", "src", "template", "type.ejs");
+    const filePath = resolve(__dirname, "../", "src", "template", "type.ejs");
     const service = await renderFile(filePath, { types });
-    const output = path.resolve(outputDir, "typings.ts");
-    fs__default['default'].writeFileSync(output, service);
+    const output = resolve(outputDir, "typings.ts");
+    fs.writeFileSync(output, service);
     report(output, service);
     const apis = getApis(data, types);
     const tagMap = new Map();
@@ -250,7 +239,7 @@ const generateService$1 = async (data, outputDir) => {
     });
     apis.forEach((api) => tagMap.get(api.tag)?.push(api));
     tagMap.forEach(async (apis, tag) => {
-        const filePath = path.resolve(__dirname, "../", "src", "template", "umi-request.ejs");
+        const filePath = resolve(__dirname, "../", "src", "template", "umi-request.ejs");
         const deps = new Set();
         apis.forEach((api) => {
             api.request.params.forEach((param) => {
@@ -266,8 +255,8 @@ const generateService$1 = async (data, outputDir) => {
             });
         });
         const service = await renderFile(filePath, { deps, apis });
-        const output = path.resolve(outputDir, `${tag}.ts`);
-        fs__default['default'].writeFileSync(output, service);
+        const output = resolve(outputDir, `${tag}.ts`);
+        fs.writeFileSync(output, service);
         report(output, service);
     });
 };
@@ -282,7 +271,7 @@ const generateService = async (option) => {
     }
     let jsonData = {};
     if (url) {
-        jsonData = await request__default['default'].get(url);
+        jsonData = await request.get(url);
     }
     if (data) {
         jsonData = JSON.parse(data);
@@ -290,4 +279,4 @@ const generateService = async (option) => {
     generateService$1(jsonData, outputDir);
 };
 
-exports.generateService = generateService;
+export { generateService };

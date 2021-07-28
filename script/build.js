@@ -27,10 +27,10 @@ async function buildEntry(config) {
   const { output } = config;
   const { file } = output;
   const isProd = /(min|prod)\.js$/.test(file);
-  const bundle = await rollup.rollup(config);
   const watcher = rollup.watch(config);
   watcher.on("event", async (event) => {
     if ((event.code === "END")) {
+      const bundle = await rollup.rollup(config);
       const {
         output: [{ code }],
       } = await bundle.generate(output);

@@ -3,5 +3,5 @@ interface Option {
     url: string;
     outputDir: string;
 }
-declare const generate: (option: Partial<Option>) => Promise<void>;
-export default generate;
+export declare const generateService: (option: Partial<Option>) => Promise<void>;
+export {};

@@ -1,5 +1,5 @@
 import request from 'umi-request';
-import generateService from './serviceGenerator'
+import _generateService from './serviceGenerator'
 import { Spec2 } from './swagger';
 
 interface Option {
@@ -8,7 +8,7 @@ interface Option {
   outputDir: string;
 }
 
-const generate = async (option : Partial<Option>) => {
+export const generateService = async (option : Partial<Option>) => {
   const {data, url, outputDir} = option;
   if(!data && !url) {
     throw new Error('please input either data or url!');
@@ -26,8 +26,7 @@ const generate = async (option : Partial<Option>) => {
     jsonData = JSON.parse(data);
   }
   
-  generateService(jsonData as Spec2, outputDir);
+  _generateService(jsonData as Spec2, outputDir);
 }
 
-export default generate;
 // # sourceMappingURL=main.js.map

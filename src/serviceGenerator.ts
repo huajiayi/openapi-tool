@@ -106,10 +106,20 @@ const getParams = (parameters: any, definitions: any): Param[] => {
   if (!parameters || parameters.length === 0) {
     return [];
   }
-
+  
   if (parameters[0]?.in === "body") {
     const originalRef = parameters?.[0]?.schema.originalRef;
     const properties = definitions[originalRef]?.properties;
+
+    if(!properties) {
+      return [{
+        in: "body",
+        name: parameters[0].name,
+        type: 'any',
+        description: parameters[0].description,
+        required: false,
+      }]
+    }
     return Object.keys(properties).map((name: string) => {
       const parameter = properties[name];
       return {

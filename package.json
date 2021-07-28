@@ -1,8 +1,9 @@
 {
   "name": "openapi-tool",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "description": "a tool to generate service file based on openapi(v2)",
-  "main": "dist/main.min.js",
+  "main": "dist/main.js",
+  "module": "dist/main.esm.js",
   "scripts": {
     "test": "node example/main.js",
     "start": "node script/build.js"
