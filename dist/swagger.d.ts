@@ -140,6 +140,16 @@ export interface FormDataParameter extends BaseParameter {
     in: "formData";
     collectionFormat?: "csv" | "ssv" | "tsv" | "pipes" | "multi";
 }
+export declare type Definitions = {
+    [name: string]: Schema2;
+} | {
+    [name: string]: Schema3;
+};
+export declare type Properties = {
+    [propertyName: string]: Schema2;
+} | {
+    [propertyName: string]: Schema3;
+};
 export declare type Parameter = BodyParameter | FormDataParameter | QueryParameter | PathParameter | HeaderParameter;
 export declare type Parameter2 = Omit<Parameter & {
     "x-deprecated"?: boolean;
@@ -228,7 +238,9 @@ export interface Response {
 export interface Response3 {
     description: string;
     content?: {
-        [name: string]: Schema & Example;
+        [name: string]: {
+            schema: Schema & Example;
+        };
     };
     headers?: {
         [name: string]: Header3;
@@ -285,6 +297,7 @@ export interface Schema extends BaseSchema {
     externalDocs?: ExternalDocs;
     example?: unknown;
     required?: string[];
+    originalRef: string;
 }
 export interface Header {
     description?: string;

@@ -1,9 +1,25 @@
 import path from "path";
 
 /**
+ * /#/.../A -> A
+ */
+export const getOriginalRef = (ref?: string): string => {
+  if(!ref) {
+    return '';
+  }
+
+  const strs = ref.split('/');
+  return strs[strs.length - 1];
+}
+
+/**
  * A<B<C>> -> [A, B, C]
  */
-export const getAllDeps = (type: string): string[] => {
+export const getAllDeps = (type?: string): string[] => {
+  if(!type) {
+    return [];
+  }
+
   return type.split('<').map(t => t.replace(/>/g, '').replace(/\[\]/g, ''));
 }
 

@@ -1,4 +1,5 @@
-export declare const getAllDeps: (type: string) => string[];
+export declare const getOriginalRef: (ref?: string | undefined) => string;
+export declare const getAllDeps: (type?: string | undefined) => string[];
 export declare const toGenericsTypes: (types: string) => string;
 export declare const toGenerics: (types: string[]) => string;
 export declare const removeGenericsSign: (type: string) => string;

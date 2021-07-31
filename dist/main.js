@@ -14,7 +14,17 @@ var fs__default = /*#__PURE__*/_interopDefaultLegacy(fs);
 var ejs__default = /*#__PURE__*/_interopDefaultLegacy(ejs);
 var path__default = /*#__PURE__*/_interopDefaultLegacy(path);
 
+const getOriginalRef = (ref) => {
+    if (!ref) {
+        return '';
+    }
+    const strs = ref.split('/');
+    return strs[strs.length - 1];
+};
 const getAllDeps = (type) => {
+    if (!type) {
+        return [];
+    }
     return type.split('<').map(t => t.replace(/>/g, '').replace(/\[\]/g, ''));
 };
 const toGenericsTypes = (types) => {
@@ -39,13 +49,19 @@ const blue = (str) => {
     return "\x1b[1m\x1b[34m" + str + "\x1b[39m\x1b[22m";
 };
 
+var Version;
+(function (Version) {
+    Version[Version["OAS2"] = 0] = "OAS2";
+    Version[Version["OAS3"] = 1] = "OAS3";
+})(Version || (Version = {}));
 const getType = (param, hasGenerics) => {
     if (!param) {
         return "any";
     }
+    const originalRef = getOriginalRef(param.$ref);
     const { type } = param;
-    if (!type && param.originalRef) {
-        return param.originalRef;
+    if (!type && originalRef) {
+        return toGenericsTypes(originalRef);
     }
     const numberEnum = [
         "int64",
@@ -75,51 +91,54 @@ const getType = (param, hasGenerics) => {
         return "boolean";
     }
     if (type === "object") {
-        return hasGenerics
-            ? "T"
-            : param.originalRef ?? param.additionalProperties?.type ?? "any";
+        return hasGenerics ? "T" : param.originalRef ?? "any";
     }
     if (type === "array") {
         return hasGenerics
             ? "T[]"
-            : `${param.items.originalRef ?? getType(param.items)}[]`;
+            : `${getOriginalRef(param.items.originalRef) ?? getType(param.items)}[]`;
     }
     return "any";
 };
-const getParams = (parameters, definitions) => {
+const parseProperties = (properties) => {
+    return Object.keys(properties).map((name) => {
+        const parameter = properties[name];
+        return {
+            in: "body",
+            name,
+            type: getType(parameter, false),
+            description: parameter.description ?? "",
+            required: false,
+        };
+    });
+};
+const getParams = (definitions, parameters) => {
     if (!parameters || parameters.length === 0) {
         return [];
     }
     if (parameters[0]?.in === "body") {
-        const originalRef = parameters?.[0]?.schema.originalRef;
+        const originalRef = getOriginalRef(parameters?.[0]?.schema.$ref);
         const properties = definitions[originalRef]?.properties;
         if (!properties) {
-            return [{
+            return [
+                {
                     in: "body",
                     name: parameters[0].name,
-                    type: 'any',
-                    description: parameters[0].description,
+                    type: "any",
+                    description: parameters[0].description ?? "",
                     required: false,
-                }];
+                },
+            ];
         }
-        return Object.keys(properties).map((name) => {
-            const parameter = properties[name];
-            return {
-                in: "body",
-                name,
-                type: getType(parameter, false),
-                description: parameter.description,
-                required: false,
-            };
-        });
+        return parseProperties(properties);
     }
     return parameters.map((parameter) => {
         return {
             in: parameter.in,
             name: parameter.name,
             type: getType(parameter, false),
-            description: parameter.description,
-            required: parameter.required,
+            description: parameter.description ?? "",
+            required: parameter.required ?? false,
         };
     });
 };
@@ -129,22 +148,28 @@ const getUrlText = (path) => {
     }
     return `\'${path}\'`;
 };
-const getApis = (data, types) => {
-    const getResponseType = (responses, generics) => {
-        const res = responses["200"];
-        if (res.schema?.type) {
-            return getType(res.schema);
+const getApis = (data, definitions, types, version) => {
+    const getResponseType = (schema, generics) => {
+        if (schema?.type) {
+            return getType(schema);
         }
-        if (res.schema?.originalRef) {
-            const type = res.schema?.originalRef?.replace(/«/g, "<").replace(/»/g, ">");
+        const originalRef = getOriginalRef(schema?.$ref);
+        if (originalRef) {
+            const type = originalRef?.replace(/«/g, "<").replace(/»/g, ">");
             const deps = getAllDeps(type);
-            if (deps.length === 1 && generics.includes(type)) {
+            if (deps.length <= 1 && generics?.includes(type ?? "")) {
                 return type + "<any>";
             }
-            const typesWithoutSign = types.map(type => removeGenericsSign(type.name));
+            const typesWithoutSign = types.map((type) => removeGenericsSign(type.name));
+            const depMap = new Map();
+            depMap.set('List', 'Array');
             for (let i = 0; i < deps.length; i++) {
+                if (depMap.has(deps[i])) {
+                    deps[i] = depMap.get(deps[i]);
+                    continue;
+                }
                 if (!typesWithoutSign.includes(deps[i])) {
-                    deps[i] = 'any';
+                    deps[i] = "any";
                 }
             }
             return toGenerics(deps);
@@ -152,34 +177,73 @@ const getApis = (data, types) => {
         return "any";
     };
     const apis = [];
-    Object.keys(data.paths).forEach((path) => {
-        const methods = data.paths[path];
-        Object.keys(methods).forEach((method) => {
-            const api = methods[method];
-            const params = getParams(api.parameters, data.definitions);
-            apis.push({
-                tag: api.tags?.[0],
-                name: api.operationId,
-                description: api.summary,
-                request: {
-                    url: path,
-                    urlText: getUrlText(path),
-                    method: method.toUpperCase(),
-                    params,
-                    filter: {
-                        path: params.filter((param) => param.in === "path"),
-                        query: params.filter((param) => param.in === "query"),
-                        body: params.filter((param) => param.in === "body"),
-                        formdata: params.filter((param) => param.in === "formdata"),
-                    },
+    const parseOperation = (path, method, api) => {
+        const params = getParams(definitions, api?.parameters);
+        let schema;
+        if (version === Version.OAS2) {
+            schema = api?.responses?.["200"].schema;
+        }
+        else {
+            const content = api?.responses?.["200"].content ?? {};
+            const firstProp = Object.keys(content)[0];
+            schema = content[firstProp].schema;
+            if (api?.requestBody) {
+                const content = api.requestBody.content;
+                const firstProp = Object.keys(content)[0];
+                const schema = content[firstProp];
+                const originalRef = getOriginalRef(schema.$ref);
+                const properties = definitions[originalRef]?.properties;
+                if (!properties) {
+                    params.push({
+                        in: "body",
+                        name: "unknownParam",
+                        type: "any",
+                        description: "",
+                        required: false,
+                    });
+                }
+                else {
+                    parseProperties(properties).forEach((param) => params.push(param));
+                }
+            }
+        }
+        apis.push({
+            tag: api?.tags?.[0] ?? "",
+            name: api?.operationId ?? "",
+            description: api?.summary ?? "",
+            request: {
+                url: path,
+                urlText: getUrlText(path),
+                method: method.toUpperCase(),
+                params,
+                filter: {
+                    path: params.filter((param) => param.in === "path"),
+                    query: params.filter((param) => param.in === "query"),
+                    body: params.filter((param) => param.in === "body"),
+                    formdata: params.filter((param) => param.in === "formdata"),
                 },
-                response: {
-                    type: getResponseType(api.responses, types
-                        .filter((type) => type.isGenerics)
-                        .map((type) => removeGenericsSign(type.name))),
-                },
-            });
+            },
+            response: {
+                type: getResponseType(schema, types
+                    .filter((type) => type.isGenerics)
+                    .map((type) => removeGenericsSign(type.name))),
+            },
         });
+    };
+    Object.keys(data).forEach((path) => {
+        const methods = data[path];
+        if (methods.get) {
+            parseOperation(path, "get", methods.get);
+        }
+        if (methods.post) {
+            parseOperation(path, "get", methods.post);
+        }
+        if (methods.put) {
+            parseOperation(path, "get", methods.put);
+        }
+        if (methods.delete) {
+            parseOperation(path, "get", methods.delete);
+        }
     });
     return apis;
 };
@@ -190,13 +254,12 @@ const getTypeParams = (properties, hasGenerics) => {
             isGenerics: hasGenerics,
             name: property,
             type: getType(param, hasGenerics),
-            description: param.description,
+            description: param.description ?? '',
             required: false,
         };
     });
 };
-const getTypes = (data) => {
-    const definitions = data.definitions || {};
+const getTypes = (definitions) => {
     const generics = new Set();
     Object.keys(definitions).forEach((definition) => {
         const genericArr = definition.split("«");
@@ -219,13 +282,34 @@ const getTypes = (data) => {
             types.push({
                 isGenerics,
                 name: isGenerics ? `${defText}<T>` : defText,
-                description: def.description || '',
+                description: def.description ?? "",
                 params: getTypeParams(def.properties, isGenerics),
             });
         }
     });
     return types;
 };
+const spec2ToOpenApi = (data) => {
+    const definitions = data.definitions ?? {};
+    const types = getTypes(definitions ?? {});
+    const apis = getApis(data.paths, definitions, types, Version.OAS2);
+    return { types, apis };
+};
+const spec3ToOpenApi = (data) => {
+    const definitions = data.components.schemas ?? {};
+    const types = getTypes(data.components.schemas ?? {});
+    const apis = getApis(data.paths, definitions, types, Version.OAS3);
+    return { types, apis };
+};
+const getOpenApi = (data) => {
+    if (data.swagger === "2.0") {
+        return spec2ToOpenApi(data);
+    }
+    else {
+        return spec3ToOpenApi(data);
+    }
+};
+
 const renderFile = (file, data) => {
     return new Promise((resolve, reject) => {
         ejs__default['default'].renderFile(file, data, {}, (err, str) => {
@@ -237,17 +321,23 @@ const renderFile = (file, data) => {
     });
 };
 const generateService$1 = async (data, outputDir) => {
-    const types = getTypes(data);
+    const openapi = getOpenApi(data);
+    const { types, apis } = openapi;
     const filePath = path.resolve(__dirname, "../", "src", "template", "type.ejs");
     const service = await renderFile(filePath, { types });
     const output = path.resolve(outputDir, "typings.ts");
+    if (!fs__default['default'].existsSync(outputDir)) {
+        fs__default['default'].mkdirSync(outputDir);
+    }
     fs__default['default'].writeFileSync(output, service);
     report(output, service);
-    const apis = getApis(data, types);
     const tagMap = new Map();
-    data.tags?.forEach((tag) => {
-        tagMap.set(tag.name, []);
-    });
+    if (!data.tags) {
+        apis.forEach(api => tagMap.set(api.tag, []));
+    }
+    else {
+        data.tags?.forEach((tag) => tagMap.set(tag.name, []));
+    }
     apis.forEach((api) => tagMap.get(api.tag)?.push(api));
     tagMap.forEach(async (apis, tag) => {
         const filePath = path.resolve(__dirname, "../", "src", "template", "umi-request.ejs");

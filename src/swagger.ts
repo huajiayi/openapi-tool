@@ -149,6 +149,10 @@ export interface FormDataParameter extends BaseParameter {
   collectionFormat?: "csv" | "ssv" | "tsv" | "pipes" | "multi";
 }
 
+export type Definitions = { [name: string]: Schema2 } | { [name: string]: Schema3 }
+
+export type Properties = { [propertyName: string]: Schema2 } | { [propertyName: string]: Schema3 }
+
 export type Parameter =
   | BodyParameter
   | FormDataParameter
@@ -239,7 +243,7 @@ export interface Response {
 
 export interface Response3 {
   description: string;
-  content?: { [name: string]: Schema & Example };
+  content?: { [name: string]: { schema: Schema & Example } };
   headers?: { [name: string]: Header3 };
 }
 
@@ -293,6 +297,7 @@ export interface Schema extends BaseSchema {
   externalDocs?: ExternalDocs;
   example?: unknown;
   required?: string[];
+  originalRef: string;
 }
 
 export interface Header {
