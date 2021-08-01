@@ -291,13 +291,13 @@ const getApis = (
       parseOperation(path, "get", methods.get);
     }
     if(methods.post) {
-      parseOperation(path, "get", methods.post);
+      parseOperation(path, "post", methods.post);
     }
     if(methods.put) {
-      parseOperation(path, "get", methods.put);
+      parseOperation(path, "put", methods.put);
     }
     if(methods.delete) {
-      parseOperation(path, "get", methods.delete);
+      parseOperation(path, "delete", methods.delete);
     }
   });
 

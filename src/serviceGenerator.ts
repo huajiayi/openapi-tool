@@ -7,7 +7,15 @@ import {
   removeGenericsSign,
   report,
 } from "./utils";
-import { API, getOpenApi } from "./openapi";
+import { API, OpenApi } from "./openapi";
+
+export type Template = 'umi-request' | 'axios';
+
+export interface ServiceGeneratorOptions {
+  template: Template;
+  importText: string;
+  outputDir: string;
+}
 
 const renderFile = (file: string, data: any): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -20,8 +28,17 @@ const renderFile = (file: string, data: any): Promise<string> => {
   });
 };
 
-const generateService = async (data: any, outputDir: string) => {
-  const openapi = getOpenApi(data);
+const generateService = async (openapi: OpenApi, options: ServiceGeneratorOptions) => {
+  const {template = 'umi-request', importText = '', outputDir} = options;
+  if (!outputDir) {
+    throw new Error("please input outputDir!");
+  }
+
+  const templates = ['umi-request', 'axios'];
+  if(!templates.includes(template)) {
+    throw new Error(`oops, there is no template of ${template} so far, you can open an issue at https://github.com/huajiayi/openapi-tool/issues.`);
+  }
+
   const { types, apis } = openapi;
 
   // 写入type文件
@@ -42,13 +59,13 @@ const generateService = async (data: any, outputDir: string) => {
 
   // 把api按tag分组
   const tagMap = new Map<string, API[]>();
-  // 如果没有tag，从apis中获取
-  if(!data.tags) {
-    apis.forEach(api => tagMap.set(api.tag, []))
-  } else {
-    data.tags?.forEach((tag: any) => tagMap.set(tag.name, []));
-  }
-  apis.forEach((api) => tagMap.get(api.tag)?.push(api));
+  apis.forEach(api => {
+    if(tagMap.has(api.tag)) {
+      tagMap.get(api.tag)?.push(api)
+    } else {
+      tagMap.set(api.tag, []);
+    }
+  });
 
   // 写入service文件，tag为文件名
   tagMap.forEach(async (apis, tag) => {
@@ -57,7 +74,7 @@ const generateService = async (data: any, outputDir: string) => {
       "../",
       "src",
       "template",
-      "umi-request.ejs"
+      `${template}.ejs`
     );
     // 找出所有依赖
     const deps = new Set<string>();
@@ -76,7 +93,7 @@ const generateService = async (data: any, outputDir: string) => {
         }
       });
     });
-    const service = await renderFile(filePath, { deps, apis });
+    const service = await renderFile(filePath, { importText, deps, apis });
     const output = resolve(outputDir, `${tag}.ts`);
     fs.writeFileSync(output, service);
     report(output, service);

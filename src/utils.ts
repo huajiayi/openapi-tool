@@ -73,3 +73,10 @@ export const logError = (e: any) => {
 export const blue = (str: string) => {
   return "\x1b[1m\x1b[34m" + str + "\x1b[39m\x1b[22m";
 }
+
+/**
+ * 判断对象是否是字符串
+ */
+export const isString = (obj: any) => {
+  return Object.prototype.toString.call(obj) === "[object String]";
+}

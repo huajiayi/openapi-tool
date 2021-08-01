@@ -1,18 +1,16 @@
 'use strict';
 
-Object.defineProperty(exports, '__esModule', { value: true });
-
 var request = require('umi-request');
+var path = require('path');
 var fs = require('fs');
 var ejs = require('ejs');
-var path = require('path');
 
 function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
 var request__default = /*#__PURE__*/_interopDefaultLegacy(request);
+var path__default = /*#__PURE__*/_interopDefaultLegacy(path);
 var fs__default = /*#__PURE__*/_interopDefaultLegacy(fs);
 var ejs__default = /*#__PURE__*/_interopDefaultLegacy(ejs);
-var path__default = /*#__PURE__*/_interopDefaultLegacy(path);
 
 const getOriginalRef = (ref) => {
     if (!ref) {
@@ -47,6 +45,9 @@ const getSize = (code) => {
 };
 const blue = (str) => {
     return "\x1b[1m\x1b[34m" + str + "\x1b[39m\x1b[22m";
+};
+const isString = (obj) => {
+    return Object.prototype.toString.call(obj) === "[object String]";
 };
 
 var Version;
@@ -236,13 +237,13 @@ const getApis = (data, definitions, types, version) => {
             parseOperation(path, "get", methods.get);
         }
         if (methods.post) {
-            parseOperation(path, "get", methods.post);
+            parseOperation(path, "post", methods.post);
         }
         if (methods.put) {
-            parseOperation(path, "get", methods.put);
+            parseOperation(path, "put", methods.put);
         }
         if (methods.delete) {
-            parseOperation(path, "get", methods.delete);
+            parseOperation(path, "delete", methods.delete);
         }
     });
     return apis;
@@ -320,8 +321,15 @@ const renderFile = (file, data) => {
         });
     });
 };
-const generateService$1 = async (data, outputDir) => {
-    const openapi = getOpenApi(data);
+const generateService = async (openapi, options) => {
+    const { template = 'umi-request', importText = '', outputDir } = options;
+    if (!outputDir) {
+        throw new Error("please input outputDir!");
+    }
+    const templates = ['umi-request', 'axios'];
+    if (!templates.includes(template)) {
+        throw new Error(`oops, there is no template of ${template} so far, you can open an issue at https://github.com/huajiayi/openapi-tool/issues.`);
+    }
     const { types, apis } = openapi;
     const filePath = path.resolve(__dirname, "../", "src", "template", "type.ejs");
     const service = await renderFile(filePath, { types });
@@ -332,15 +340,16 @@ const generateService$1 = async (data, outputDir) => {
     fs__default['default'].writeFileSync(output, service);
     report(output, service);
     const tagMap = new Map();
-    if (!data.tags) {
-        apis.forEach(api => tagMap.set(api.tag, []));
-    }
-    else {
-        data.tags?.forEach((tag) => tagMap.set(tag.name, []));
-    }
-    apis.forEach((api) => tagMap.get(api.tag)?.push(api));
+    apis.forEach(api => {
+        if (tagMap.has(api.tag)) {
+            tagMap.get(api.tag)?.push(api);
+        }
+        else {
+            tagMap.set(api.tag, []);
+        }
+    });
     tagMap.forEach(async (apis, tag) => {
-        const filePath = path.resolve(__dirname, "../", "src", "template", "umi-request.ejs");
+        const filePath = path.resolve(__dirname, "../", "src", "template", `${template}.ejs`);
         const deps = new Set();
         apis.forEach((api) => {
             api.request.params.forEach((param) => {
@@ -355,29 +364,44 @@ const generateService$1 = async (data, outputDir) => {
                 }
             });
         });
-        const service = await renderFile(filePath, { deps, apis });
+        const service = await renderFile(filePath, { importText, deps, apis });
         const output = path.resolve(outputDir, `${tag}.ts`);
         fs__default['default'].writeFileSync(output, service);
         report(output, service);
     });
 };
 
-const generateService = async (option) => {
-    const { data, url, outputDir } = option;
-    if (!data && !url) {
-        throw new Error('please input either data or url!');
+const plugins = [];
+class OpenApiTool {
+    constructor(options) {
+        const { data, url } = options;
+        if (!data && !url) {
+            throw new Error("please input either data or url!");
+        }
+        this.options = options;
+        this.registerPlugins(plugins);
     }
-    if (!outputDir) {
-        throw new Error('please input outputDir!');
+    static use(plugin, options) {
+        plugins.push({ plugin, options });
     }
-    let jsonData = {};
-    if (url) {
-        jsonData = await request__default['default'].get(url);
+    async getOpenApi() {
+        const { data, url } = this.options;
+        let jsonData = {};
+        if (url) {
+            jsonData = await request__default['default'].get(url);
+        }
+        if (data && isString(data)) {
+            jsonData = JSON.parse(data);
+        }
+        return getOpenApi(jsonData);
     }
-    if (data) {
-        jsonData = JSON.parse(data);
+    async generateService(options) {
+        const openapi = await this.getOpenApi();
+        generateService(openapi, options);
     }
-    generateService$1(jsonData, outputDir);
-};
+    registerPlugins(plugins) {
+        plugins.forEach((pluginObj) => pluginObj.plugin(this, pluginObj.options));
+    }
+}
 
-exports.generateService = generateService;
+module.exports = OpenApiTool;

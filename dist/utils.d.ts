@@ -9,3 +9,4 @@ export declare const report: (dist: string, code: string) => void;
 export declare const getSize: (code: string) => string;
 export declare const logError: (e: any) => void;
 export declare const blue: (str: string) => string;
+export declare const isString: (obj: any) => boolean;

@@ -1,13 +1,8 @@
 <%_ if(importText !== '') { -%>
 <%- importText  %> 
 <%_ } else { -%>
-import request from 'umi-request';
+const axios = require('axios').default;
 <%_ } -%>
-import {
-  <%_ deps.forEach((dep) => { -%>
-  <%- dep %>,
-  <%_ }); -%>
-} from './typings';
 <% apis.forEach((api) => { %>
 /**
  * <%- api.description %> <%- api.request.method %> <%- api.request.url %>
@@ -43,24 +38,26 @@ export async function <%- api.name %> (
   <%_ } -%>
   options?: Record<string, any>,
 ) {
-  return request<<%- api.response.type %>>(<%- api.request.urlText %>, {
+  return axios({
     method: '<%- api.request.method %>',
+    url: <%- api.request.urlText %>,
     <%_ if(api.request.filter.query.length !== 0) { -%>
-    params: {
-      ...params,
-    },
-    <%_ } -%>
-    <%_ if(api.request.filter.body.length !== 0) { -%>
-    data: {
-      ...data,
-    },
-    <%_ } -%>
-    <%_ if(api.request.filter.formdata.length !== 0) { -%>
-    body: {
-      ...body,
-    },
-    <%_ } -%>
-    ...(options || {}),
-  });
+      params: {
+        ...params,
+      },
+      <%_ } -%>
+      <%_ if(api.request.filter.body.length !== 0) { -%>
+      data: {
+        ...data,
+      },
+      <%_ } -%>
+      <%_ if(api.request.filter.formdata.length !== 0) { -%>
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      data: {
+        ...data,
+      },
+      <%_ } -%>
+      ...(options || {}),
+  })
 }
-<% }); %>
+<%_ }); -%>
