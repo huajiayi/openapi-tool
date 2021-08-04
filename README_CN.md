@@ -58,7 +58,7 @@ openApiTool.generateService({
 **Options:**
 
 | 参数 | 说明 | 类型 | 默认值 | 是否必须 |
-| ------ | ------ | ------ |
+| ------ | ------ | ------ | ------ | ------ |
 | url | swagger 文档的地址  | string | - | url 或者 data 选填 |
 | data | swagger 文档的 json 数据 | string | - | url 或者 data 选填 |
 
@@ -69,7 +69,7 @@ openApiTool.generateService({
 **ServiceGeneratorOptions:**
 
 | 参数 | 说明 | 类型 | 默认值 | 是否必须 |
-| ------ | ------ | ------ |
+| ------ | ------ | ------ | ------ | ------ |
 | outputDir | 输出目录  | string | - | true |
 | template | 想要生成的 HTTP 客户端模板 | string | `'umi-request'` | false |
 | importText | 导入依赖的语句  | string | `默认导入语句` | false |

@@ -59,7 +59,7 @@ Create a new `OpenApiTool` instance.
 **Options:**
 
 | Property | Description | Type | Default | required |
-| ------ | ------ | ------ |
+| ------ | ------ | ------ | ------ | ------ |
 | url | The url of swagger document  | string | - | either url or data |
 | data | The json of swagger document | string | - | either url or data |
 
@@ -70,7 +70,7 @@ Generate service files, the name of file will be the tag's name.
 **ServiceGeneratorOptions:**
 
 | Property | Description | Type | Default | required |
-| ------ | ------ | ------ |
+| ------ | ------ | ------ | ------ | ------ |
 | outputDir | Output directory  | string | - | true |
 | template | HTTP client template which you want to generate  | string | `'umi-request'` | false |
 | importText | Import statements  | string | `default statements` | false |
