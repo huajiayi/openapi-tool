@@ -1,14 +1,14 @@
-import request from "umi-request";
-import { getOpenApi, OpenApi } from "./openapi";
-import generateService, { ServiceGeneratorOptions } from "./serviceGenerator";
-import { isString } from "./utils";
+import request from 'umi-request';
+import { getOpenApi, OpenApi } from './openapi';
+import generateService, { ServiceGeneratorOptions } from './serviceGenerator';
+import { isString } from './utils';
 
 export interface Options {
   data: string;
   url: string;
 }
 
-export type Plugin = (openApiTool: OpenApiTool, options: any) => void;
+export type Plugin = (openApiTool: typeof OpenApiTool, options: any) => void;
 
 type Plugins = {
   plugin: Plugin;
@@ -27,7 +27,7 @@ export default class OpenApiTool {
   public constructor(options: Options) {
     const { data, url } = options;
     if (!data && !url) {
-      throw new Error("please input either data or url!");
+      throw new Error('please input either data or url!');
     }
 
     this.options = options;
@@ -38,7 +38,7 @@ export default class OpenApiTool {
   public async getOpenApi(): Promise<OpenApi> {
     const { data, url } = this.options;
 
-    let jsonData = {};
+    let jsonData = data;
     if (url) {
       jsonData = await request.get(url);
     }
@@ -57,7 +57,7 @@ export default class OpenApiTool {
 
   /** 注册插件 */
   private registerPlugins(plugins: Plugins) {
-    plugins.forEach((pluginObj) => pluginObj.plugin(this, pluginObj.options));
+    plugins.forEach((pluginObj) => pluginObj.plugin(OpenApiTool, pluginObj.options));
   }
 }
 // # sourceMappingURL=main.js.map

@@ -1,13 +1,13 @@
-import fs from "fs";
-import ejs from "ejs";
-import { resolve } from "path";
+import fs from 'fs';
+import ejs from 'ejs';
+import { resolve } from 'path';
 import {
   getAllDeps,
   removeArraySign,
   removeGenericsSign,
   report,
-} from "./utils";
-import { API, OpenApi } from "./openapi";
+} from './utils';
+import { API, OpenApi } from './openapi';
 
 export type Template = 'umi-request' | 'axios';
 
@@ -15,6 +15,7 @@ export interface ServiceGeneratorOptions {
   template: Template;
   importText: string;
   outputDir: string;
+  typescript: boolean;
 }
 
 const renderFile = (file: string, data: any): Promise<string> => {
@@ -29,9 +30,9 @@ const renderFile = (file: string, data: any): Promise<string> => {
 };
 
 const generateService = async (openapi: OpenApi, options: ServiceGeneratorOptions) => {
-  const {template = 'umi-request', importText = '', outputDir} = options;
+  const {template = 'umi-request', importText = '', outputDir, typescript = false} = options;
   if (!outputDir) {
-    throw new Error("please input outputDir!");
+    throw new Error('please input outputDir!');
   }
 
   const templates = ['umi-request', 'axios'];
@@ -41,39 +42,40 @@ const generateService = async (openapi: OpenApi, options: ServiceGeneratorOption
 
   const { types, apis } = openapi;
 
-  // 写入type文件
-  const filePath = resolve(
-    __dirname, // 这里的__dirname指向dist
-    "../",
-    "src",
-    "template",
-    "type.ejs"
-  );
-  const service = await renderFile(filePath, { types });
-  const output = resolve(outputDir, "typings.ts");
-  if(!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir);
+  // 生成type文件
+  if(typescript) {
+    const filePath = resolve(
+      __dirname, // 这里的__dirname指向dist
+      '../',
+      'src',
+      'template',
+      'type.ejs'
+    );
+    const service = await renderFile(filePath, { types });
+    const output = resolve(outputDir, 'typings.ts');
+    if(!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir);
+    }
+    fs.writeFileSync(output, service);
+    report(output, service);
   }
-  fs.writeFileSync(output, service);
-  report(output, service);
 
   // 把api按tag分组
   const tagMap = new Map<string, API[]>();
   apis.forEach(api => {
-    if(tagMap.has(api.tag)) {
-      tagMap.get(api.tag)?.push(api)
-    } else {
+    if(!tagMap.has(api.tag)) {
       tagMap.set(api.tag, []);
     }
+    tagMap.get(api.tag)?.push(api)
   });
 
-  // 写入service文件，tag为文件名
+  // 生成service文件，tag为文件名
   tagMap.forEach(async (apis, tag) => {
     const filePath = resolve(
       __dirname, // 这里的__dirname指向dist
-      "../",
-      "src",
-      "template",
+      '../',
+      'src',
+      'template',
       `${template}.ejs`
     );
     // 找出所有依赖
@@ -93,8 +95,9 @@ const generateService = async (openapi: OpenApi, options: ServiceGeneratorOption
         }
       });
     });
-    const service = await renderFile(filePath, { importText, deps, apis });
-    const output = resolve(outputDir, `${tag}.ts`);
+    const service = await renderFile(filePath, { importText, deps, apis, typescript });
+    const fileSuffix = typescript ? 'ts' : 'js';
+    const output = resolve(outputDir, `${tag}.${fileSuffix}`);
     fs.writeFileSync(output, service);
     report(output, service);
   });

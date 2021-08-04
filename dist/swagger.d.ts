@@ -1,6 +1,6 @@
-export declare type DataType = "integer" | "number" | "boolean" | "string" | "array" | "object" | "file";
-export declare type DataFormat = "int32" | "int64" | "float" | "double" | "byte" | "binary" | "date" | "date-time" | "password";
-export declare type Protocol = "http" | "https" | "ws" | "wss";
+export declare type DataType = 'integer' | 'number' | 'boolean' | 'string' | 'array' | 'object' | 'file';
+export declare type DataFormat = 'int32' | 'int64' | 'float' | 'double' | 'byte' | 'binary' | 'date' | 'date-time' | 'password';
+export declare type Protocol = 'http' | 'https' | 'ws' | 'wss';
 export declare type SupportedSpecMajorVersion = 2 | 3;
 export interface Spec {
     info: Info;
@@ -8,7 +8,7 @@ export interface Spec {
     externalDocs?: ExternalDocs;
 }
 export interface Spec2 extends Spec {
-    swagger: "2.0";
+    swagger: '2.0';
     host?: string;
     basePath?: string;
     schemes?: Protocol[];
@@ -32,7 +32,7 @@ export interface Spec2 extends Spec {
     };
 }
 export interface Spec3 extends Spec {
-    openapi: "3.0.0";
+    openapi: '3.0.0';
     servers: Server[];
     components: Components;
     paths: {
@@ -109,7 +109,7 @@ export interface Example3 {
 }
 export interface BaseParameter extends BaseSchema {
     name: string;
-    in: "query" | "header" | "path" | "formData" | "body";
+    in: 'query' | 'header' | 'path' | 'formData' | 'body';
     required?: boolean;
     description?: string;
     example?: unknown;
@@ -122,23 +122,23 @@ export interface BaseParameter extends BaseSchema {
     deprecated?: boolean;
 }
 export interface BodyParameter extends BaseParameter {
-    in: "body";
+    in: 'body';
 }
 export interface QueryParameter extends BaseParameter {
-    in: "query";
+    in: 'query';
     allowEmptyValue?: boolean;
-    collectionFormat?: "csv" | "ssv" | "tsv" | "pipes" | "multi";
+    collectionFormat?: 'csv' | 'ssv' | 'tsv' | 'pipes' | 'multi';
 }
 export declare function isQueryParameter(parameter: BaseParameter): parameter is QueryParameter;
 export interface PathParameter extends BaseParameter {
-    in: "path";
+    in: 'path';
 }
 export interface HeaderParameter extends BaseParameter {
-    in: "header";
+    in: 'header';
 }
 export interface FormDataParameter extends BaseParameter {
-    in: "formData";
-    collectionFormat?: "csv" | "ssv" | "tsv" | "pipes" | "multi";
+    in: 'formData';
+    collectionFormat?: 'csv' | 'ssv' | 'tsv' | 'pipes' | 'multi';
 }
 export declare type Definitions = {
     [name: string]: Schema2;
@@ -152,8 +152,8 @@ export declare type Properties = {
 };
 export declare type Parameter = BodyParameter | FormDataParameter | QueryParameter | PathParameter | HeaderParameter;
 export declare type Parameter2 = Omit<Parameter & {
-    "x-deprecated"?: boolean;
-}, "deprecated">;
+    'x-deprecated'?: boolean;
+}, 'deprecated'>;
 export declare type Parameter3 = Parameter;
 export interface Path {
     $ref?: string;
@@ -267,10 +267,10 @@ export interface BaseSchema {
     maxProperties?: number;
     minProperties?: number;
     enum?: Array<string | number | null>;
-    "x-enum-varnames"?: string[];
+    'x-enum-varnames'?: string[];
     items?: BaseSchema;
 }
-export interface Schema3 extends Omit<Schema, "type"> {
+export interface Schema3 extends Omit<Schema, 'type'> {
     type?: DataType;
     nullable?: boolean;
     anyOf?: BaseSchema[];
@@ -281,8 +281,8 @@ export interface Schema2 extends Schema {
     properties?: {
         [propertyName: string]: Schema2;
     };
-    ["x-nullable"]?: boolean;
-    ["x-deprecated"]?: boolean;
+    ['x-nullable']?: boolean;
+    ['x-deprecated']?: boolean;
 }
 export interface Schema extends BaseSchema {
     type?: DataType;
@@ -301,10 +301,10 @@ export interface Schema extends BaseSchema {
 }
 export interface Header {
     description?: string;
-    type: "string" | "number" | "integer" | "boolean" | "array";
+    type: 'string' | 'number' | 'integer' | 'boolean' | 'array';
     format?: string;
     items?: BaseSchema;
-    collectionFormat?: "csv" | "ssv" | "tsv" | "pipes" | "multi";
+    collectionFormat?: 'csv' | 'ssv' | 'tsv' | 'pipes' | 'multi';
     default?: string | boolean | number | any;
     maximum?: number;
     exclusiveMaximum?: boolean;
@@ -344,19 +344,19 @@ interface BaseOAuthSecurity extends BaseSecurity {
     scopes?: OAuthScope;
 }
 export interface BasicSecurity3 extends BaseSecurity {
-    type: "http";
-    scheme: "basic";
+    type: 'http';
+    scheme: 'basic';
 }
 export interface BasicSecurity extends BaseSecurity {
-    type: "basic";
+    type: 'basic';
 }
 export interface ApiKeySecurity extends BaseSecurity {
-    type: "apiKey";
+    type: 'apiKey';
     name: string;
-    in: "query" | "header";
+    in: 'query' | 'header';
 }
 export interface OAuth2Security3 extends BaseSecurity {
-    type: "oauth2";
+    type: 'oauth2';
     flows: OAuthFlow;
 }
 export interface OAuth2SecurityFlow3 extends BaseSecurity {
@@ -365,24 +365,24 @@ export interface OAuth2SecurityFlow3 extends BaseSecurity {
     scopes?: OAuthScope;
 }
 export interface OAuth2ImplicitSecurity extends BaseOAuthSecurity {
-    type: "oauth2";
+    type: 'oauth2';
     description?: string;
-    flow: "implicit";
+    flow: 'implicit';
     authorizationUrl: string;
 }
 export interface OAuth2PasswordSecurity extends BaseOAuthSecurity {
-    type: "oauth2";
-    flow: "password";
+    type: 'oauth2';
+    flow: 'password';
     tokenUrl: string;
 }
 export interface OAuth2ApplicationSecurity extends BaseOAuthSecurity {
-    type: "oauth2";
-    flow: "application";
+    type: 'oauth2';
+    flow: 'application';
     tokenUrl: string;
 }
 export interface OAuth2AccessCodeSecurity extends BaseOAuthSecurity {
-    type: "oauth2";
-    flow: "accessCode";
+    type: 'oauth2';
+    flow: 'accessCode';
     tokenUrl: string;
     authorizationUrl: string;
 }
@@ -392,6 +392,6 @@ export interface OAuthScope {
 export declare type OAuthFlow = {
     [flowName in OAuth2FlowTypes]?: OAuth2SecurityFlow3;
 };
-export declare type OAuth2FlowTypes = "authorizationCode" | "implicit" | "password" | "clientCredentials";
+export declare type OAuth2FlowTypes = 'authorizationCode' | 'implicit' | 'password' | 'clientCredentials';
 export declare type Security = BasicSecurity | BasicSecurity3 | ApiKeySecurity | OAuth2AccessCodeSecurity | OAuth2ApplicationSecurity | OAuth2ImplicitSecurity | OAuth2PasswordSecurity | OAuth2Security3;
 export {};

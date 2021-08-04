@@ -1,4 +1,4 @@
-import { Spec2, Spec3 } from "./swagger";
+import { Spec2, Spec3 } from './swagger';
 export declare enum Version {
     OAS2 = 0,
     OAS3 = 1

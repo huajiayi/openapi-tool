@@ -1,4 +1,4 @@
-import path from "path";
+import path from 'path';
 
 /**
  * /#/.../A -> A
@@ -27,7 +27,7 @@ export const getAllDeps = (type?: string): string[] => {
  * A«B«C»» -> A<B<C>>
  */
 export const toGenericsTypes = (types: string): string => {
-  return types.replace(/«/g, "<").replace(/»/g, ">");
+  return types.replace(/«/g, '<').replace(/»/g, '>');
 }
 
 /**
@@ -59,11 +59,11 @@ export const isGenerics = (type: string): boolean => {
 }
 
 export const report = (dist: string, code: string) => {
-  console.log(blue(path.relative(process.cwd(), dist)) + " " + getSize(code));
+  console.log(blue(path.relative(process.cwd(), dist)) + ' ' + getSize(code));
 }
 
 export const getSize = (code: string) => {
-  return (code.length / 1024).toFixed(2) + "kb";
+  return (code.length / 1024).toFixed(2) + 'kb';
 }
 
 export const logError = (e: any) => {
@@ -71,12 +71,12 @@ export const logError = (e: any) => {
 }
 
 export const blue = (str: string) => {
-  return "\x1b[1m\x1b[34m" + str + "\x1b[39m\x1b[22m";
+  return '\x1b[1m\x1b[34m' + str + '\x1b[39m\x1b[22m';
 }
 
 /**
  * 判断对象是否是字符串
  */
 export const isString = (obj: any) => {
-  return Object.prototype.toString.call(obj) === "[object String]";
+  return Object.prototype.toString.call(obj) === '[object String]';
 }

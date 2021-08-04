@@ -1,10 +1,10 @@
-import { OpenApi } from "./openapi";
-import { ServiceGeneratorOptions } from "./serviceGenerator";
+import { OpenApi } from './openapi';
+import { ServiceGeneratorOptions } from './serviceGenerator';
 export interface Options {
     data: string;
     url: string;
 }
-export declare type Plugin = (openApiTool: OpenApiTool, options: any) => void;
+export declare type Plugin = (openApiTool: typeof OpenApiTool, options: any) => void;
 export default class OpenApiTool {
     static use(plugin: Plugin, options: any): void;
     private options;

@@ -11,14 +11,14 @@ import {
   Schema3,
   Spec2,
   Spec3,
-} from "./swagger";
+} from './swagger';
 import {
   getAllDeps,
   getOriginalRef,
   removeGenericsSign,
   toGenerics,
   toGenericsTypes,
-} from "./utils";
+} from './utils';
 
 export enum Version {
   OAS2,
@@ -69,7 +69,7 @@ export interface OpenApi {
 
 const getType = (param?: any, hasGenerics?: boolean): string => {
   if (!param) {
-    return "any";
+    return 'any';
   }
 
   const originalRef = getOriginalRef(param.$ref);
@@ -79,53 +79,53 @@ const getType = (param?: any, hasGenerics?: boolean): string => {
   }
 
   const numberEnum = [
-    "int64",
-    "integer",
-    "long",
-    "float",
-    "double",
-    "number",
-    "int",
-    "float",
-    "double",
-    "int32",
-    "int64",
+    'int64',
+    'integer',
+    'long',
+    'float',
+    'double',
+    'number',
+    'int',
+    'float',
+    'double',
+    'int32',
+    'int64',
   ];
-  const dateEnum = ["Date", "date", "dateTime", "date-time", "datetime"];
-  const stringEnum = ["string", "email", "password", "url", "byte", "binary"];
+  const dateEnum = ['Date', 'date', 'dateTime', 'date-time', 'datetime'];
+  const stringEnum = ['string', 'email', 'password', 'url', 'byte', 'binary'];
 
   if (numberEnum.includes(type)) {
-    return "number";
+    return 'number';
   }
   if (dateEnum.includes(type)) {
-    return "string";
+    return 'string';
   }
   if (stringEnum.includes(type)) {
-    return "string";
+    return 'string';
   }
-  if (type === "boolean") {
-    return "boolean";
+  if (type === 'boolean') {
+    return 'boolean';
   }
-  if (type === "object") {
-    return hasGenerics ? "T" : param.originalRef ?? "any";
+  if (type === 'object') {
+    return hasGenerics ? 'T' : param.originalRef ?? 'any';
   }
-  if (type === "array") {
+  if (type === 'array') {
     return hasGenerics
-      ? "T[]"
+      ? 'T[]'
       : `${getOriginalRef(param.items.originalRef) ?? getType(param.items)}[]`;
   }
 
-  return "any";
+  return 'any';
 };
 
 const parseProperties = (properties: Properties): Param[] => {
   return Object.keys(properties).map((name: string) => {
     const parameter = properties[name];
     return {
-      in: "body",
+      in: 'body',
       name,
       type: getType(parameter, false),
-      description: parameter.description ?? "",
+      description: parameter.description ?? '',
       required: false,
     };
   });
@@ -139,17 +139,17 @@ const getParams = (
     return [];
   }
 
-  if (parameters[0]?.in === "body") {
+  if (parameters[0]?.in === 'body') {
     const originalRef = getOriginalRef(parameters?.[0]?.schema.$ref);
     const properties = definitions[originalRef]?.properties;
 
     if (!properties) {
       return [
         {
-          in: "body",
+          in: 'body',
           name: parameters[0].name,
-          type: "any",
-          description: parameters[0].description ?? "",
+          type: 'any',
+          description: parameters[0].description ?? '',
           required: false,
         },
       ];
@@ -163,15 +163,15 @@ const getParams = (
       in: parameter.in,
       name: parameter.name,
       type: getType(parameter, false),
-      description: parameter.description ?? "",
+      description: parameter.description ?? '',
       required: parameter.required ?? false,
     };
   });
 };
 
 const getUrlText = (path: string) => {
-  if (path.includes("{")) {
-    return `\`${path.replace(/{/g, "${pathVars.")}\``;
+  if (path.includes('{')) {
+    return `\`${path.replace(/{/g, '${pathVars.')}\``;
   }
 
   return `\'${path}\'`;
@@ -190,12 +190,12 @@ const getApis = (
 
     const originalRef = getOriginalRef(schema?.$ref);
     if (originalRef) {
-      const type = originalRef?.replace(/«/g, "<").replace(/»/g, ">");
+      const type = originalRef?.replace(/«/g, '<').replace(/»/g, '>');
       const deps = getAllDeps(type);
       
       // 如果泛型Type没有内部泛型，填充一个<any>
-      if (deps.length <= 1 && generics?.includes(type ?? "")) {
-        return type + "<any>";
+      if (deps.length <= 1 && generics?.includes(type ?? '')) {
+        return type + '<any>';
       }
 
       // 找出不包含在types中的依赖，设为any
@@ -213,14 +213,14 @@ const getApis = (
         }
 
         if (!typesWithoutSign.includes(deps[i])) {
-          deps[i] = "any";
+          deps[i] = 'any';
         }
       }
       
       return toGenerics(deps);
     }
 
-    return "any";
+    return 'any';
   };
 
   const apis: API[] = [];
@@ -232,9 +232,9 @@ const getApis = (
     const params = getParams(definitions, api?.parameters);
     let schema: Schema | Schema3 | undefined;
     if (version === Version.OAS2) {
-      schema = (api as Operation)?.responses?.["200"].schema;
+      schema = (api as Operation)?.responses?.['200'].schema;
     } else {
-      const content = (api as Operation3)?.responses?.["200"].content ?? {};
+      const content = (api as Operation3)?.responses?.['200'].content ?? {};
       const firstProp = Object.keys(content)[0];
       schema = content[firstProp].schema;
 
@@ -246,10 +246,10 @@ const getApis = (
         const properties = definitions[originalRef]?.properties;
         if (!properties) {
           params.push({
-            in: "body",
-            name: "unknownParam",
-            type: "any",
-            description: "",
+            in: 'body',
+            name: 'unknownParam',
+            type: 'any',
+            description: '',
             required: false,
           });
         } else {
@@ -259,19 +259,19 @@ const getApis = (
     }
 
     apis.push({
-      tag: api?.tags?.[0] ?? "",
-      name: api?.operationId ?? "",
-      description: api?.summary ?? "",
+      tag: api?.tags?.[0] ?? '',
+      name: api?.operationId ?? '',
+      description: api?.summary ?? '',
       request: {
         url: path,
         urlText: getUrlText(path),
         method: method.toUpperCase(),
         params,
         filter: {
-          path: params.filter((param) => param.in === "path"),
-          query: params.filter((param) => param.in === "query"),
-          body: params.filter((param) => param.in === "body"),
-          formdata: params.filter((param) => param.in === "formdata"),
+          path: params.filter((param) => param.in === 'path'),
+          query: params.filter((param) => param.in === 'query'),
+          body: params.filter((param) => param.in === 'body'),
+          formdata: params.filter((param) => param.in === 'formdata'),
         },
       },
       response: {
@@ -288,16 +288,16 @@ const getApis = (
   Object.keys(data).forEach((path: string) => {
     const methods = data[path];
     if(methods.get) {
-      parseOperation(path, "get", methods.get);
+      parseOperation(path, 'get', methods.get);
     }
     if(methods.post) {
-      parseOperation(path, "post", methods.post);
+      parseOperation(path, 'post', methods.post);
     }
     if(methods.put) {
-      parseOperation(path, "put", methods.put);
+      parseOperation(path, 'put', methods.put);
     }
     if(methods.delete) {
-      parseOperation(path, "delete", methods.delete);
+      parseOperation(path, 'delete', methods.delete);
     }
   });
 
@@ -321,7 +321,7 @@ const getTypes = (definitions: Definitions): Type[] => {
   // 找出所有的泛型
   const generics = new Set<string>();
   Object.keys(definitions).forEach((definition) => {
-    const genericArr = definition.split("«");
+    const genericArr = definition.split('«');
     genericArr.pop();
     genericArr.forEach((g) => generics.add(g));
   });
@@ -346,7 +346,7 @@ const getTypes = (definitions: Definitions): Type[] => {
       types.push({
         isGenerics,
         name: isGenerics ? `${defText}<T>` : defText,
-        description: def.description ?? "",
+        description: def.description ?? '',
         params: getTypeParams(def.properties, isGenerics),
       });
     }
@@ -372,7 +372,7 @@ export const spec3ToOpenApi = (data: Spec3): OpenApi => {
 };
 
 export const getOpenApi = (data: any): OpenApi => {
-  if (data.swagger === "2.0") {
+  if (data.swagger === '2.0') {
     return spec2ToOpenApi(data);
   } else {
     return spec3ToOpenApi(data);

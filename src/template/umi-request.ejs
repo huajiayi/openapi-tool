@@ -3,47 +3,49 @@
 <%_ } else { -%>
 import request from 'umi-request';
 <%_ } -%>
+<%_ if(typescript) { -%>
 import {
   <%_ deps.forEach((dep) => { -%>
   <%- dep %>,
   <%_ }); -%>
 } from './typings';
+<%_ } -%>
 <% apis.forEach((api) => { %>
 /**
  * <%- api.description %> <%- api.request.method %> <%- api.request.url %>
  */
 export async function <%- api.name %> (
   <%_ if(api.request.filter.path.length !== 0) { -%>
-  pathVars: {
+  pathVars<%_ if(typescript) { -%>: {
     <%_ api.request.filter.path.forEach((param) => { -%>
     <%- param.name %><% if(!param.required) { %>?<% } %>: <%- param.type %>; // <%- param.description %>
     <%_ }); -%>
-  },
+  }<%_ } -%>,
   <%_ } -%>
   <%_ if(api.request.filter.query.length !== 0) { -%>
-  params: {
+  params<%_ if(typescript) { -%>: {
     <%_ api.request.filter.query.forEach((param) => { -%>
     <%- param.name %><% if(param.required) { %>?<% } %>: <%- param.type %>; // <%- param.description %>
     <%_ }); -%>
-  },
+  }<%_ } -%>,
   <%_ } -%>
   <%_ if(api.request.filter.body.length !== 0) { -%>
-  data: {
+  data<%_ if(typescript) { -%>: {
     <%_ api.request.filter.body.forEach((param) => { -%>
     <%- param.name %><% if(param.required) { %>?<% } %>: <%- param.type %>; // <%- param.description %>
     <%_ }); -%>
-  },
+  }<%_ } -%>,
   <%_ } -%>
   <%_ if(api.request.filter.formdata.length !== 0) { -%>
-  body: {
+  body<%_ if(typescript) { -%>: {
     <%_ api.request.filter.formdata.forEach((param) => { -%>
     <%- param.name %><% if(param.required) { %>?<% } %>: <%- param.type %>; // <%- param.description %>
     <%_ }); -%>
-  },
+  }<%_ } -%>,
   <%_ } -%>
-  options?: Record<string, any>,
+  options<%_ if(typescript) { -%>?: Record<string, any><%_ } -%>,
 ) {
-  return request<<%- api.response.type %>>(<%- api.request.urlText %>, {
+  return request<%_ if(typescript) { -%><<%- api.response.type %>><%_ } -%>(<%- api.request.urlText %>, {
     method: '<%- api.request.method %>',
     <%_ if(api.request.filter.query.length !== 0) { -%>
     params: {
