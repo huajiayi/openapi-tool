@@ -12,10 +12,11 @@ import { API, OpenApi } from './openapi';
 export type Template = 'umi-request' | 'axios';
 
 export interface ServiceGeneratorOptions {
-  template: Template;
-  importText: string;
+  template?: Template;
+  importText?: string;
   outputDir: string;
-  typescript: boolean;
+  typescript?: boolean;
+  format?: (openapi: OpenApi) => OpenApi;
 }
 
 const renderFile = (file: string, data: any): Promise<string> => {
@@ -29,7 +30,7 @@ const renderFile = (file: string, data: any): Promise<string> => {
   });
 };
 
-const generateService = async (openapi: OpenApi, options: ServiceGeneratorOptions) => {
+const generateService = async (originalOpenApi: OpenApi, options: ServiceGeneratorOptions) => {
   const {template = 'umi-request', importText = '', outputDir, typescript = false} = options;
   if (!outputDir) {
     throw new Error('please input outputDir!');
@@ -40,6 +41,12 @@ const generateService = async (openapi: OpenApi, options: ServiceGeneratorOption
     throw new Error(`oops, there is no template of ${template} so far, you can open an issue at https://github.com/huajiayi/openapi-tool/issues.`);
   }
 
+  // 如果有format，格式化openapi
+  let openapi: OpenApi = JSON.parse(JSON.stringify(originalOpenApi));
+  const {format} = options;
+  if(format) {
+    openapi = format(openapi);
+  }
   const { types, apis } = openapi;
 
   // 生成type文件

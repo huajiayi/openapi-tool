@@ -75,6 +75,7 @@ Generate service files, the name of file will be the tag's name.
 | template | HTTP client template which you want to generate  | string | `'umi-request'` | false |
 | importText | Import statements  | string | `default statements` | false |
 | typescript | Generate ts file and typings  | boolean | `false` | false |
+| format | Format content of OpenApi  | (openapi: OpenApi) => OpenApi | - | false |
 
 #### `getOpenApi(): Promise<OpenApi>`
 

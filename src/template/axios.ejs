@@ -47,7 +47,7 @@ export async function <%- api.name %> (
 )<%_ if(typescript) { -%>: Promise<<%- api.response.type %>><%_ } -%> {
   return axios({
     method: '<%- api.request.method %>',
-    url: <%- api.request.urlText %>,
+    url: `<%- api.request.urlText %>`,
     <%_ if(api.request.filter.query.length !== 0) { -%>
     params: {
       ...params,

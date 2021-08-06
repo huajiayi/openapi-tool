@@ -1,10 +1,11 @@
 import { OpenApi } from './openapi';
 export declare type Template = 'umi-request' | 'axios';
 export interface ServiceGeneratorOptions {
-    template: Template;
-    importText: string;
+    template?: Template;
+    importText?: string;
     outputDir: string;
-    typescript: boolean;
+    typescript?: boolean;
+    format?: (openapi: OpenApi) => OpenApi;
 }
-declare const generateService: (openapi: OpenApi, options: ServiceGeneratorOptions) => Promise<void>;
+declare const generateService: (originalOpenApi: OpenApi, options: ServiceGeneratorOptions) => Promise<void>;
 export default generateService;

@@ -171,10 +171,10 @@ const getParams = (
 
 const getUrlText = (path: string) => {
   if (path.includes('{')) {
-    return `\`${path.replace(/{/g, '${pathVars.')}\``;
+    return `${path.replace(/{/g, '${pathVars.')}`;
   }
 
-  return `\'${path}\'`;
+  return `${path}`;
 };
 
 const getApis = (

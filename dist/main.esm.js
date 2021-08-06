@@ -136,9 +136,9 @@ const getParams = (definitions, parameters) => {
 };
 const getUrlText = (path) => {
     if (path.includes('{')) {
-        return `\`${path.replace(/{/g, '${pathVars.')}\``;
+        return `${path.replace(/{/g, '${pathVars.')}`;
     }
-    return `\'${path}\'`;
+    return `${path}`;
 };
 const getApis = (data, definitions, types, version) => {
     const getResponseType = (schema, generics) => {
@@ -312,7 +312,7 @@ const renderFile = (file, data) => {
         });
     });
 };
-const generateService = async (openapi, options) => {
+const generateService = async (originalOpenApi, options) => {
     const { template = 'umi-request', importText = '', outputDir, typescript = false } = options;
     if (!outputDir) {
         throw new Error('please input outputDir!');
@@ -320,6 +320,11 @@ const generateService = async (openapi, options) => {
     const templates = ['umi-request', 'axios'];
     if (!templates.includes(template)) {
         throw new Error(`oops, there is no template of ${template} so far, you can open an issue at https://github.com/huajiayi/openapi-tool/issues.`);
+    }
+    let openapi = JSON.parse(JSON.stringify(originalOpenApi));
+    const { format } = options;
+    if (format) {
+        openapi = format(openapi);
     }
     const { types, apis } = openapi;
     if (typescript) {
@@ -389,7 +394,7 @@ class OpenApiTool {
     }
     async generateService(options) {
         const openapi = await this.getOpenApi();
-        generateService(openapi, options);
+        await generateService(openapi, options);
     }
     registerPlugins(plugins) {
         plugins.forEach((pluginObj) => pluginObj.plugin(OpenApiTool, pluginObj.options));

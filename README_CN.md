@@ -29,8 +29,7 @@ npm install openapi-tool
 ```js
 const OpenApiTool = require('openapi-tool').default;
 ```
-**PS: 输入 `.default` 只是为了获得TypeScript 的类型支持，如果你要启动项目的话，请在启动前删除 `.default`，不然会报错。
-**
+**PS: 输入 `.default` 只是为了获得TypeScript 的类型支持，如果你要启动项目的话，请在启动前删除 `.default`，不然会报错。**
 
 #### 使用方式
 
@@ -74,6 +73,7 @@ openApiTool.generateService({
 | template | 想要生成的 HTTP 客户端模板 | string | `'umi-request'` | false |
 | importText | 导入依赖的语句  | string | `默认导入语句` | false |
 | typescript | 是否生成 ts 文件和类型  | boolean | `false` | false |
+| format | 格式化OpenApi内容  | (openapi: OpenApi) => OpenApi | - | false |
 
 #### `getOpenApi(): Promise<OpenApi>`
 

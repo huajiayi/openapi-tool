@@ -52,7 +52,7 @@ export default class OpenApiTool {
   /** 生成Service文件 */
   public async generateService(options: ServiceGeneratorOptions) {
     const openapi = await this.getOpenApi();
-    generateService(openapi, options);
+    await generateService(openapi, options);
   }
 
   /** 注册插件 */

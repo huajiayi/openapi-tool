@@ -45,7 +45,7 @@ export async function <%- api.name %> (
   <%_ } -%>
   options<%_ if(typescript) { -%>?: Record<string, any><%_ } -%>,
 ) {
-  return request<%_ if(typescript) { -%><<%- api.response.type %>><%_ } -%>(<%- api.request.urlText %>, {
+  return request<%_ if(typescript) { -%><<%- api.response.type %>><%_ } -%>(`<%- api.request.urlText %>`, {
     method: '<%- api.request.method %>',
     <%_ if(api.request.filter.query.length !== 0) { -%>
     params: {
