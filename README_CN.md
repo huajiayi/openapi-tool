@@ -34,7 +34,7 @@ const OpenApiTool = require('openapi-tool').default;
 #### 使用方式
 
 ```js
-import OpenApiTool from 'openapi-tool';
+const OpenApiTool = require('openapi-tool');
 const { resolve } = require('path');
 
 const url = 'https://gw.alipayobjects.com/os/antfincdn/M%24jrzTTYJN/oneapi.json';
