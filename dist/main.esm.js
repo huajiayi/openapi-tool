@@ -182,7 +182,7 @@ const getApis = (data, definitions, types, version) => {
             if (api?.requestBody) {
                 const content = api.requestBody.content;
                 const firstProp = Object.keys(content)[0];
-                const schema = content[firstProp];
+                const schema = content[firstProp].schema;
                 const originalRef = getOriginalRef(schema.$ref);
                 const properties = definitions[originalRef]?.properties;
                 if (!properties) {
