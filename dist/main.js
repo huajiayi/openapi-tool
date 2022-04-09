@@ -182,10 +182,10 @@ const getApis = (data, definitions, types, version) => {
         const params = getParams(definitions, api?.parameters);
         let schema;
         if (version === Version.OAS2) {
-            schema = api?.responses?.['200'].schema;
+            schema = (api?.responses?.['200'] ?? api?.responses?.['201']).schema;
         }
         else {
-            const content = api?.responses?.['200'].content ?? {};
+            const content = (api?.responses?.['200'] ?? api?.responses?.['201']).content ?? {};
             const firstProp = Object.keys(content)[0];
             schema = content[firstProp].schema;
             if (api?.requestBody) {

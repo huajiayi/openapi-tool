@@ -232,9 +232,9 @@ const getApis = (
     const params = getParams(definitions, api?.parameters);
     let schema: Schema | Schema3 | undefined;
     if (version === Version.OAS2) {
-      schema = (api as Operation)?.responses?.['200'].schema;
+      schema = ((api as Operation)?.responses?.['200'] ?? (api as Operation)?.responses?.['201']).schema;
     } else {
-      const content = (api as Operation3)?.responses?.['200'].content ?? {};
+      const content = ((api as Operation3)?.responses?.['200'] ?? (api as Operation3)?.responses?.['201']).content ?? {};
       const firstProp = Object.keys(content)[0];
       schema = content[firstProp].schema;
 
