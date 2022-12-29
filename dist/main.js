@@ -55,6 +55,9 @@ var Version;
     Version[Version["OAS2"] = 0] = "OAS2";
     Version[Version["OAS3"] = 1] = "OAS3";
 })(Version || (Version = {}));
+const getEnumType = (enums) => {
+    return `(${enums.map(e => `'${e}'`).join(' | ')})`;
+};
 const getType = (param, hasGenerics) => {
     if (!param) {
         return 'any';
@@ -86,6 +89,9 @@ const getType = (param, hasGenerics) => {
         return 'string';
     }
     if (stringEnum.includes(type)) {
+        if (param.enum) {
+            return getEnumType(param.enum);
+        }
         return 'string';
     }
     if (type === 'boolean') {
@@ -97,7 +103,7 @@ const getType = (param, hasGenerics) => {
     if (type === 'array') {
         return hasGenerics
             ? 'T[]'
-            : `${getOriginalRef(param.items.originalRef) ?? getType(param.items)}[]`;
+            : `${getOriginalRef(param.items.originalRef) !== '' || getType(param.items)}[]`;
     }
     return 'any';
 };

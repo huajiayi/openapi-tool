@@ -67,6 +67,10 @@ export interface OpenApi {
   apis: API[]; // 接口
 }
 
+const getEnumType = (enums: string[]) => {
+  return `(${enums.map(e => `'${e}'`).join(' | ')})`;
+}
+
 const getType = (param?: any, hasGenerics?: boolean): string => {
   if (!param) {
     return 'any';
@@ -101,6 +105,9 @@ const getType = (param?: any, hasGenerics?: boolean): string => {
     return 'string';
   }
   if (stringEnum.includes(type)) {
+    if (param.enum) {
+      return getEnumType(param.enum);
+    }
     return 'string';
   }
   if (type === 'boolean') {
@@ -112,7 +119,7 @@ const getType = (param?: any, hasGenerics?: boolean): string => {
   if (type === 'array') {
     return hasGenerics
       ? 'T[]'
-      : `${getOriginalRef(param.items.originalRef) ?? getType(param.items)}[]`;
+      : `${getOriginalRef(param.items.originalRef) !== '' || getType(param.items)}[]`;
   }
 
   return 'any';
