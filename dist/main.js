@@ -65,6 +65,9 @@ const getType = (param, hasGenerics) => {
     const originalRef = getOriginalRef(param.$ref);
     const { type } = param;
     if (!type && originalRef) {
+        if (hasGenerics) {
+            return 'T';
+        }
         return toGenericsTypes(originalRef);
     }
     const numberEnum = [

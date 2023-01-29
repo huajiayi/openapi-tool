@@ -1,8 +1,9 @@
-<%_ types.forEach((type) => { %>
+<%_ types.forEach((type) => { -%>
 export type <%- type.name %> = {
   <%_ type.params.forEach((param) => { -%>
   /** <%- param.description %> */
   <%- param.name %><% if(!param.required) { %>?<% } %>: <%- param.type %>;
   <%_ }); -%>
 }
+
 <%_ }); -%>

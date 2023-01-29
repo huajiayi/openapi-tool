@@ -79,6 +79,10 @@ const getType = (param?: any, hasGenerics?: boolean): string => {
   const originalRef = getOriginalRef(param.$ref);
   const { type } = param;
   if (!type && originalRef) {
+    if (hasGenerics) {
+      return 'T';
+    }
+
     return toGenericsTypes(originalRef);
   }
 
@@ -113,7 +117,7 @@ const getType = (param?: any, hasGenerics?: boolean): string => {
   if (type === 'boolean') {
     return 'boolean';
   }
-  if (type === 'object') {
+  if (type === 'object') {   
     return hasGenerics ? 'T' : param.originalRef ?? 'any';
   }
   if (type === 'array') {
