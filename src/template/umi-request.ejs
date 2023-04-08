@@ -53,6 +53,14 @@ export async function <%- api.name %> (
   <%_ } -%>
   options<%_ if(typescript) { -%>?: Record<string, any><%_ } -%>,
 ) {
+  <%_ if(api.request.filter.formdata.length !== 0) { -%>
+  const formData = new FormData();
+    <%_ api.request.filter.formdata.forEach((param) => { -%>
+  if (body?.<%- param.name %>) {
+    formData.append('<%- param.name %>', body.<%- param.name %>);
+  }
+    <%_ }); -%>
+  <%_ } -%>
   return request<%_ if(typescript) { -%><<%- api.response.type %>><%_ } -%>(`<%- api.request.urlText %>`, {
     method: '<%- api.request.method %>',
     <%_ if(api.request.filter.query.length !== 0) { -%>
@@ -70,9 +78,8 @@ export async function <%- api.name %> (
       <%_ } -%>
     <%_ } -%>
     <%_ if(api.request.filter.formdata.length !== 0) { -%>
-    body: {
-      ...body,
-    },
+    body: formData,
+    requestType: 'form',
     <%_ } -%>
     ...(options || {}),
   });
