@@ -33,6 +33,11 @@ export interface Param {
   required: boolean; // 是否必须
 }
 
+export interface Body {
+  arrayType: string; // 数组类型
+  params: Param[]; // 参数
+}
+
 export interface API {
   tag: string; // openapi tag，可用作文件名
   name: string; // 函数名
@@ -46,7 +51,7 @@ export interface API {
     filter: {
       path: Param[]; // path变量
       query: Param[]; // 请求参数
-      body: Param[]; // 请求体
+      body: Body; // 请求体
       formdata: Param[]; // formdata
     };
   };
@@ -75,6 +80,15 @@ const getType = (param?: any, hasGenerics?: boolean): string => {
   if (!param) {
     return 'any';
   }
+
+  if (param.schema) {
+    let type = getType(param.schema);
+    if (param.explode) {
+      type += '[]';
+    }
+    return type;
+  }
+  
 
   const originalRef = getOriginalRef(param.$ref);
   const { type } = param;
@@ -129,11 +143,24 @@ const getType = (param?: any, hasGenerics?: boolean): string => {
   return 'any';
 };
 
-const parseProperties = (properties: Properties): Param[] => {
+const parseBodyProperties = (properties: Properties): Param[] => {
   return Object.keys(properties).map((name: string) => {
     const parameter = properties[name];
     return {
       in: 'body',
+      name,
+      type: getType(parameter, false),
+      description: parameter.description ?? '',
+      required: false,
+    };
+  });
+};
+
+const parseFormDataProperties = (properties: Properties): Param[] => {
+  return Object.keys(properties).map((name: string) => {
+    const parameter = properties[name];
+    return {
+      in: 'formdata',
       name,
       type: getType(parameter, false),
       description: parameter.description ?? '',
@@ -166,7 +193,7 @@ const getParams = (
       ];
     }
 
-    return parseProperties(properties);
+    return parseBodyProperties(properties);
   }
 
   return parameters.map((parameter) => {
@@ -241,6 +268,10 @@ const getApis = (
     api?: Operation | Operation3
   ) => {
     const params = getParams(definitions, api?.parameters);
+    const body: Body = {
+      arrayType: '',
+      params: []
+    };
     let schema: Schema | Schema3 | undefined;
     if (version === Version.OAS2) {
       schema = ((api as Operation)?.responses?.['200'] ?? (api as Operation)?.responses?.['201']).schema;
@@ -249,23 +280,38 @@ const getApis = (
       const firstProp = Object.keys(content)[0];
       schema = content[firstProp].schema;
 
-      if (api?.requestBody) {
-        const content = (api.requestBody as any).content;
+      const parseRequestBody = (requestBody: any) => {
+        const content = requestBody.content;
         const firstProp = Object.keys(content)[0];
         const schema = content[firstProp].schema;
+        if (firstProp === 'multipart/form-data') {
+          parseFormDataProperties(schema.properties).forEach((param) => params.push(param));
+          return;
+        }
+
+        if (schema.type === 'array') {
+          body.arrayType = getType(schema.items)
+          return;
+        }
+
         const originalRef = getOriginalRef(schema.$ref);
         const properties = definitions[originalRef]?.properties;
-        if (!properties) {
-          params.push({
-            in: 'body',
-            name: 'unknownParam',
-            type: 'any',
-            description: '',
-            required: false,
-          });
-        } else {
-          parseProperties(properties).forEach((param) => params.push(param));
+        if (properties) {
+          parseBodyProperties(properties).forEach((param) => body.params.push(param));
+          return;
         }
+
+        body.params.push({
+          in: 'body',
+          name: 'unknownParam',
+          type: 'any',
+          description: '',
+          required: false,
+        });
+      }
+      
+      if (api?.requestBody) {
+        parseRequestBody(api?.requestBody);
       }
     }
 
@@ -281,7 +327,7 @@ const getApis = (
         filter: {
           path: params.filter((param) => param.in === 'path'),
           query: params.filter((param) => param.in === 'query'),
-          body: params.filter((param) => param.in === 'body'),
+          body: body,
           formdata: params.filter((param) => param.in === 'formdata'),
         },
       },

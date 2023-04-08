@@ -10,6 +10,10 @@ export interface Param {
     description: string;
     required: boolean;
 }
+export interface Body {
+    arrayType: string;
+    params: Param[];
+}
 export interface API {
     tag: string;
     name: string;
@@ -22,7 +26,7 @@ export interface API {
         filter: {
             path: Param[];
             query: Param[];
-            body: Param[];
+            body: Body;
             formdata: Param[];
         };
     };

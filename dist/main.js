@@ -62,6 +62,13 @@ const getType = (param, hasGenerics) => {
     if (!param) {
         return 'any';
     }
+    if (param.schema) {
+        let type = getType(param.schema);
+        if (param.explode) {
+            type += '[]';
+        }
+        return type;
+    }
     const originalRef = getOriginalRef(param.$ref);
     const { type } = param;
     if (!type && originalRef) {
@@ -110,11 +117,23 @@ const getType = (param, hasGenerics) => {
     }
     return 'any';
 };
-const parseProperties = (properties) => {
+const parseBodyProperties = (properties) => {
     return Object.keys(properties).map((name) => {
         const parameter = properties[name];
         return {
             in: 'body',
+            name,
+            type: getType(parameter, false),
+            description: parameter.description ?? '',
+            required: false,
+        };
+    });
+};
+const parseFormDataProperties = (properties) => {
+    return Object.keys(properties).map((name) => {
+        const parameter = properties[name];
+        return {
+            in: 'formdata',
             name,
             type: getType(parameter, false),
             description: parameter.description ?? '',
@@ -140,7 +159,7 @@ const getParams = (definitions, parameters) => {
                 },
             ];
         }
-        return parseProperties(properties);
+        return parseBodyProperties(properties);
     }
     return parameters.map((parameter) => {
         return {
@@ -189,6 +208,10 @@ const getApis = (data, definitions, types, version) => {
     const apis = [];
     const parseOperation = (path, method, api) => {
         const params = getParams(definitions, api?.parameters);
+        const body = {
+            arrayType: '',
+            params: []
+        };
         let schema;
         if (version === Version.OAS2) {
             schema = (api?.responses?.['200'] ?? api?.responses?.['201']).schema;
@@ -197,24 +220,34 @@ const getApis = (data, definitions, types, version) => {
             const content = (api?.responses?.['200'] ?? api?.responses?.['201']).content ?? {};
             const firstProp = Object.keys(content)[0];
             schema = content[firstProp].schema;
-            if (api?.requestBody) {
-                const content = api.requestBody.content;
+            const parseRequestBody = (requestBody) => {
+                const content = requestBody.content;
                 const firstProp = Object.keys(content)[0];
                 const schema = content[firstProp].schema;
+                if (firstProp === 'multipart/form-data') {
+                    parseFormDataProperties(schema.properties).forEach((param) => params.push(param));
+                    return;
+                }
+                if (schema.type === 'array') {
+                    body.arrayType = getType(schema.items);
+                    return;
+                }
                 const originalRef = getOriginalRef(schema.$ref);
                 const properties = definitions[originalRef]?.properties;
-                if (!properties) {
-                    params.push({
-                        in: 'body',
-                        name: 'unknownParam',
-                        type: 'any',
-                        description: '',
-                        required: false,
-                    });
+                if (properties) {
+                    parseBodyProperties(properties).forEach((param) => body.params.push(param));
+                    return;
                 }
-                else {
-                    parseProperties(properties).forEach((param) => params.push(param));
-                }
+                body.params.push({
+                    in: 'body',
+                    name: 'unknownParam',
+                    type: 'any',
+                    description: '',
+                    required: false,
+                });
+            };
+            if (api?.requestBody) {
+                parseRequestBody(api?.requestBody);
             }
         }
         apis.push({
@@ -229,7 +262,7 @@ const getApis = (data, definitions, types, version) => {
                 filter: {
                     path: params.filter((param) => param.in === 'path'),
                     query: params.filter((param) => param.in === 'query'),
-                    body: params.filter((param) => param.in === 'body'),
+                    body: body,
                     formdata: params.filter((param) => param.in === 'formdata'),
                 },
             },
@@ -372,6 +405,16 @@ const generateService = async (originalOpenApi, options) => {
                     deps.add(dep);
                 }
             });
+            api.request.filter.body.params.forEach((param) => {
+                const dep = removeArraySign(param.type);
+                if (types.some((type) => removeGenericsSign(type.name) === dep)) {
+                    deps.add(dep);
+                }
+            });
+            const dep = removeArraySign(api.request.filter.body.arrayType);
+            if (types.some((type) => removeGenericsSign(type.name) === dep)) {
+                deps.add(dep);
+            }
             getAllDeps(api.response.type).forEach((dep) => {
                 if (types.some((type) => removeGenericsSign(type.name) === dep)) {
                     deps.add(dep);

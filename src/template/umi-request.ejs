@@ -24,23 +24,27 @@ export async function <%- api.name %> (
   }<%_ } -%>,
   <%_ } -%>
   <%_ if(api.request.filter.query.length !== 0) { -%>
-  params<%_ if(typescript) { -%>: {
+  params<%_ if(typescript) { -%>?: {
     <%_ api.request.filter.query.forEach((param) => { -%>
     /** <%- param.description %> */
     <%- param.name %><% if(!param.required) { %>?<% } %>: <%- param.type %>;
     <%_ }); -%>
   }<%_ } -%>,
   <%_ } -%>
-  <%_ if(api.request.filter.body.length !== 0) { -%>
-  data<%_ if(typescript) { -%>: {
-    <%_ api.request.filter.body.forEach((param) => { -%>
+  <%_ if(api.request.filter.body.arrayType.length !== 0) { -%>
+  data<%_ if(typescript) { -%>?: <%- api.request.filter.body.arrayType %>[],<%_ } %>
+  <%_ } else { -%>
+    <%_ if(api.request.filter.body.params.length !== 0) { -%>
+  data<%_ if(typescript) { -%>?: {
+    <%_ api.request.filter.body.params.forEach((param) => { -%>
     /** <%- param.description %> */
     <%- param.name %><% if(!param.required) { %>?<% } %>: <%- param.type %>;
     <%_ }); -%>
   }<%_ } -%>,
   <%_ } -%>
+  <%_ } -%>
   <%_ if(api.request.filter.formdata.length !== 0) { -%>
-  body<%_ if(typescript) { -%>: {
+  body<%_ if(typescript) { -%>?: {
     <%_ api.request.filter.formdata.forEach((param) => { -%>
     /** <%- param.description %> */
     <%- param.name %><% if(!param.required) { %>?<% } %>: <%- param.type %>;
@@ -56,10 +60,14 @@ export async function <%- api.name %> (
       ...params,
     },
     <%_ } -%>
-    <%_ if(api.request.filter.body.length !== 0) { -%>
+    <%_ if(api.request.filter.body.arrayType.length !== 0) { -%>
+    data,
+    <%_ } else { -%>
+      <%_ if(api.request.filter.body.params.length !== 0) { -%>
     data: {
       ...data,
     },
+      <%_ } -%>
     <%_ } -%>
     <%_ if(api.request.filter.formdata.length !== 0) { -%>
     body: {

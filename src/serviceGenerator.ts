@@ -95,6 +95,17 @@ const generateService = async (originalOpenApi: OpenApi, options: ServiceGenerat
           deps.add(dep);
         }
       });
+      // 找出request中body的依赖
+      api.request.filter.body.params.forEach((param) => {
+        const dep = removeArraySign(param.type);
+        if (types.some((type) => removeGenericsSign(type.name) === dep)) {
+          deps.add(dep);
+        }
+      });
+      const dep = removeArraySign(api.request.filter.body.arrayType);
+      if (types.some((type) => removeGenericsSign(type.name) === dep)) {
+        deps.add(dep);
+      }
       // 找出response中的依赖
       getAllDeps(api.response.type).forEach((dep) => {
         if (types.some((type) => removeGenericsSign(type.name) === dep)) {
@@ -102,6 +113,7 @@ const generateService = async (originalOpenApi: OpenApi, options: ServiceGenerat
         }
       });
     });
+    
     const service = await renderFile(filePath, { importText, deps, apis, typescript });
     const fileSuffix = typescript ? 'ts' : 'js';
     const output = resolve(outputDir, `${tag}.${fileSuffix}`);
