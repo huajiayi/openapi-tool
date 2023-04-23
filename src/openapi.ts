@@ -361,13 +361,19 @@ const getApis = (
   return apis;
 };
 
-const getTypeParams = (properties: Properties, hasGenerics: boolean): Param[] => {
+const getTypeParams = (properties: Properties, hasGenerics: boolean, lastDep: string): Param[] => {
   return Object.keys(properties).map((property) => {
     const param = properties[property];
+    const $ref = param.items?.$ref ?? param.$ref;
+    let type = getType(param, hasGenerics)
+    if (type === 'T' && !$ref?.includes(lastDep)) {
+      type = getOriginalRef($ref);
+    }
+
     return {
       isGenerics: hasGenerics,
       name: property,
-      type: getType(param, hasGenerics),
+      type,
       description: param.description ?? '',
       required: false,
     };
@@ -404,7 +410,7 @@ const getTypes = (definitions: Definitions): Type[] => {
         isGenerics,
         name: isGenerics ? `${defText}<T>` : defText,
         description: def.description ?? '',
-        params: getTypeParams(def.properties, isGenerics),
+        params: getTypeParams(def.properties, isGenerics, deps[deps.length - 1]),
       });
     }
   });

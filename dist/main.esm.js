@@ -281,13 +281,18 @@ const getApis = (data, definitions, types, version) => {
     });
     return apis;
 };
-const getTypeParams = (properties, hasGenerics) => {
+const getTypeParams = (properties, hasGenerics, lastDep) => {
     return Object.keys(properties).map((property) => {
         const param = properties[property];
+        const $ref = param.items?.$ref ?? param.$ref;
+        let type = getType(param, hasGenerics);
+        if (type === 'T' && !$ref?.includes(lastDep)) {
+            type = getOriginalRef($ref);
+        }
         return {
             isGenerics: hasGenerics,
             name: property,
-            type: getType(param, hasGenerics),
+            type,
             description: param.description ?? '',
             required: false,
         };
@@ -317,7 +322,7 @@ const getTypes = (definitions) => {
                 isGenerics,
                 name: isGenerics ? `${defText}<T>` : defText,
                 description: def.description ?? '',
-                params: getTypeParams(def.properties, isGenerics),
+                params: getTypeParams(def.properties, isGenerics, deps[deps.length - 1]),
             });
         }
     });
