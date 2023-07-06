@@ -157,6 +157,10 @@ const parseBodyProperties = (properties: Properties): Param[] => {
 };
 
 const parseFormDataProperties = (properties: Properties): Param[] => {
+  // 兼容properties为空的模式.
+  if (!properties) {
+    return []
+  }
   return Object.keys(properties).map((name: string) => {
     const parameter = properties[name];
     return {
