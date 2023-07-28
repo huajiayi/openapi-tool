@@ -57,7 +57,7 @@ export async function <%- api.name %> (
   const formData = new FormData();
     <%_ api.request.filter.formdata.forEach((param) => { -%>
   if (data?.<%- param.name %>) {
-    formData.append('<%- param.name %>', body.<%- param.name %>);
+    formData.append('<%- param.name %>', data.<%- param.name %>);
   }
     <%_ }); -%>
   <%_ } -%>
