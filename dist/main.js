@@ -130,6 +130,9 @@ const parseBodyProperties = (properties) => {
     });
 };
 const parseFormDataProperties = (properties) => {
+    if (!properties) {
+        return [];
+    }
     return Object.keys(properties).map((name) => {
         const parameter = properties[name];
         return {
