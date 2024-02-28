@@ -38,7 +38,7 @@ const removeArraySign = (type) => {
     return type.replace(/\[\]/g, '');
 };
 const report = (dist, code) => {
-    console.log(blue(path__default['default'].relative(process.cwd(), dist)) + ' ' + getSize(code));
+    console.log(blue(path__default["default"].relative(process.cwd(), dist)) + ' ' + getSize(code));
 };
 const getSize = (code) => {
     return (code.length / 1024).toFixed(2) + 'kb';
@@ -113,7 +113,7 @@ const getType = (param, hasGenerics) => {
     if (type === 'array') {
         return hasGenerics
             ? 'T[]'
-            : `${getOriginalRef(param.items.originalRef) !== '' || getType(param.items)}[]`;
+            : `${getOriginalRef(param.items.originalRef) || getType(param.items)}[]`;
     }
     return 'any';
 };
@@ -363,7 +363,7 @@ const getOpenApi = (data) => {
 
 const renderFile = (file, data) => {
     return new Promise((resolve, reject) => {
-        ejs__default['default'].renderFile(file, data, {}, (err, str) => {
+        ejs__default["default"].renderFile(file, data, {}, (err, str) => {
             if (err) {
                 reject(err.message);
             }
@@ -390,10 +390,10 @@ const generateService = async (originalOpenApi, options) => {
         const filePath = path.resolve(__dirname, '../', 'src', 'template', 'type.ejs');
         const service = await renderFile(filePath, { types });
         const output = path.resolve(outputDir, 'typings.ts');
-        if (!fs__default['default'].existsSync(outputDir)) {
-            fs__default['default'].mkdirSync(outputDir);
+        if (!fs__default["default"].existsSync(outputDir)) {
+            fs__default["default"].mkdirSync(outputDir);
         }
-        fs__default['default'].writeFileSync(output, service);
+        fs__default["default"].writeFileSync(output, service);
         report(output, service);
     }
     const tagMap = new Map();
@@ -432,7 +432,7 @@ const generateService = async (originalOpenApi, options) => {
         const service = await renderFile(filePath, { importText, deps, apis, typescript });
         const fileSuffix = typescript ? 'ts' : 'js';
         const output = path.resolve(outputDir, `${tag}.${fileSuffix}`);
-        fs__default['default'].writeFileSync(output, service);
+        fs__default["default"].writeFileSync(output, service);
         report(output, service);
     });
 };
@@ -454,7 +454,7 @@ class OpenApiTool {
         const { data, url } = this.options;
         let jsonData = data;
         if (url) {
-            jsonData = await request__default['default'].get(url);
+            jsonData = await request__default["default"].get(url);
         }
         if (data && isString(data)) {
             jsonData = JSON.parse(data);

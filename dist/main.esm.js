@@ -104,7 +104,7 @@ const getType = (param, hasGenerics) => {
     if (type === 'array') {
         return hasGenerics
             ? 'T[]'
-            : `${getOriginalRef(param.items.originalRef) !== '' || getType(param.items)}[]`;
+            : `${getOriginalRef(param.items.originalRef) || getType(param.items)}[]`;
     }
     return 'any';
 };
@@ -461,4 +461,4 @@ class OpenApiTool {
     }
 }
 
-export default OpenApiTool;
+export { OpenApiTool as default };
