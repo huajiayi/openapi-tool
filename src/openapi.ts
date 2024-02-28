@@ -137,7 +137,7 @@ const getType = (param?: any, hasGenerics?: boolean): string => {
   if (type === 'array') {
     return hasGenerics
       ? 'T[]'
-      : `${getOriginalRef(param.items.originalRef) !== '' || getType(param.items)}[]`;
+      : `${getOriginalRef(param.items.originalRef) || getType(param.items)}[]`;
   }
 
   return 'any';
