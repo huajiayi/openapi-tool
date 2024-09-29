@@ -282,7 +282,7 @@ const getApis = (
     } else {
       const content = ((api as Operation3)?.responses?.['200'] ?? (api as Operation3)?.responses?.['201']).content ?? {};
       const firstProp = Object.keys(content)[0];
-      schema = content[firstProp].schema;
+      schema = content[firstProp]?.schema;
 
       const parseRequestBody = (requestBody: any) => {
         const content = requestBody.content;

@@ -213,7 +213,7 @@ const getApis = (data, definitions, types, version) => {
         else {
             const content = (api?.responses?.['200'] ?? api?.responses?.['201']).content ?? {};
             const firstProp = Object.keys(content)[0];
-            schema = content[firstProp].schema;
+            schema = content[firstProp]?.schema;
             const parseRequestBody = (requestBody) => {
                 const content = requestBody.content;
                 const firstProp = Object.keys(content)[0];
@@ -461,4 +461,4 @@ class OpenApiTool {
     }
 }
 
-export default OpenApiTool;
+export { OpenApiTool as default };

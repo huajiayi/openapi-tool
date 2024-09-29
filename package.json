@@ -1,6 +1,6 @@
 {
   "name": "openapi-tool",
-  "version": "0.4.10",
+  "version": "0.4.11",
   "description": "a tool to generate service file based on openapi",
   "main": "dist/main.js",
   "module": "dist/main.esm.js",
@@ -18,9 +18,9 @@
     "@typescript-eslint/parser": "^4.28.3",
     "eslint": "^7.31.0",
     "eslint-config-alloy": "^4.1.0",
-    "rollup": "^2.53.2",
+    "rollup": "^2.60.0",
     "rollup-plugin-eslint": "^7.0.0",
-    "rollup-plugin-typescript2": "^0.30.0",
+    "rollup-plugin-typescript2": "^0.36.0",
     "terser": "^5.7.1",
     "tslib": "^2.3.0",
     "typescript": "^4.3.5"
