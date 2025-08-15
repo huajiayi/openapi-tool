@@ -434,6 +434,11 @@ export const spec3ToOpenApi = (data: Spec3): OpenApi => {
   const definitions = data.components.schemas ?? {};
   const types = getTypes(data.components.schemas ?? {});
   const apis = getApis(data.paths, definitions, types, Version.OAS3);
+  const basePath = new URL(data.servers?.[0]?.url, 'http://dummybase.com').pathname ?? '';
+  apis.forEach(api => {
+    api.request.url = basePath + api.request.url;
+    api.request.urlText = basePath + api.request.urlText;
+  })
 
   return { types, apis };
 };
