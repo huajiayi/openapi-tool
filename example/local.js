@@ -1,8 +1,8 @@
-const OpenApiTool = require('openapi-tool');
+const OpenApiTool = require('../dist/main');
 const { resolve } = require('path');
 
-const url = 'http://localhost:11001/api/v1/v3/api-docs';
-const outputDir = resolve(__dirname, '../', 'src', 'service');
+const url = 'http://localhost:12001/api/v1/v3/api-docs';
+const outputDir = resolve(__dirname, './', 'service');
 
 const firstUpperCase = (str) => {
   let tmp = str.toLowerCase();
@@ -37,6 +37,7 @@ openApiTool.generateService({
   importText: `import { request } from 'umi';`,
   typescript: true,
   outputDir,
+  genericFields: ['Response', 'List', 'Page'],
   format: (openapi) => {
     openapi.apis.forEach(o => {
       // 格式化文件名
@@ -81,3 +82,4 @@ openApiTool.generateService({
     return openapi;
   }
 });
+

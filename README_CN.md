@@ -74,6 +74,7 @@ openApiTool.generateService({
 | importText | 导入依赖的语句  | string | `默认导入语句` | false |
 | typescript | 是否生成 ts 文件和类型  | boolean | `false` | false |
 | format | 格式化OpenApi内容  | (openapi: OpenApi) => OpenApi | - | false |
+| genericFields | 泛型字段  | string[] | - | false |
 
 #### `getOpenApi(): Promise<OpenApi>`
 

@@ -10,3 +10,6 @@ export declare const getSize: (code: string) => string;
 export declare const logError: (e: any) => void;
 export declare const blue: (str: string) => string;
 export declare const isString: (obj: any) => boolean;
+export declare const normalizeGenerics: (name: string, genericFields?: string[] | undefined) => string;
+export declare const traverseAndReplace: (obj: any, genericFields: string[]) => void;
+export declare const replaceKeys: (obj: any, genericFields: string[]) => any;

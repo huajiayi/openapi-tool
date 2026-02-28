@@ -4,7 +4,7 @@ import path from 'path';
  * /#/.../A -> A
  */
 export const getOriginalRef = (ref?: string): string => {
-  if(!ref) {
+  if (!ref) {
     return '';
   }
 
@@ -16,7 +16,7 @@ export const getOriginalRef = (ref?: string): string => {
  * A<B<C>> -> [A, B, C]
  */
 export const getAllDeps = (type?: string): string[] => {
-  if(!type) {
+  if (!type) {
     return [];
   }
 
@@ -80,3 +80,55 @@ export const blue = (str: string) => {
 export const isString = (obj: any) => {
   return Object.prototype.toString.call(obj) === '[object String]';
 }
+
+/**
+ * 格式化泛型名称
+ * ResponseListUser -> Response«List«User»»
+ */
+export const normalizeGenerics = (name: string, genericFields?: string[]): string => {
+  if (!genericFields || genericFields.length === 0) {
+    return name;
+  }
+
+  let currentName = name;
+
+  for (const wrapper of genericFields) {
+    if (currentName.startsWith(wrapper) && currentName !== wrapper) {
+      currentName = currentName.substring(wrapper.length);
+      return `${wrapper}«${normalizeGenerics(currentName, genericFields)}»`;
+    }
+  }
+
+  return name;
+}
+
+export const traverseAndReplace = (obj: any, genericFields: string[]) => {
+  if (!obj || typeof obj !== 'object') {
+    return;
+  }
+  if (Array.isArray(obj)) {
+    obj.forEach(item => traverseAndReplace(item, genericFields));
+    return;
+  }
+  for (const key of Object.keys(obj)) {
+    if (key === '$ref' && typeof obj[key] === 'string') {
+      const parts = obj[key].split('/');
+      const name = parts.pop();
+      if (name) {
+        parts.push(normalizeGenerics(name, genericFields));
+        obj[key] = parts.join('/');
+      }
+    } else {
+      traverseAndReplace(obj[key], genericFields);
+    }
+  }
+};
+
+export const replaceKeys = (obj: any, genericFields: string[]) => {
+  if (!obj || typeof obj !== 'object') return obj;
+  const newObj: any = {};
+  for (const key of Object.keys(obj)) {
+    newObj[normalizeGenerics(key, genericFields)] = obj[key];
+  }
+  return newObj;
+};

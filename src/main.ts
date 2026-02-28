@@ -1,7 +1,7 @@
 import request from 'umi-request';
 import { getOpenApi, OpenApi } from './openapi';
 import generateService, { ServiceGeneratorOptions } from './serviceGenerator';
-import { isString } from './utils';
+import { isString, replaceKeys, traverseAndReplace } from './utils';
 
 export interface Options {
   data: string;
@@ -35,10 +35,10 @@ export default class OpenApiTool {
   }
 
   /** 获取OpenApi */
-  public async getOpenApi(): Promise<OpenApi> {
+  public async getOpenApi(options?: ServiceGeneratorOptions): Promise<OpenApi> {
     const { data, url } = this.options;
 
-    let jsonData = data;
+    let jsonData: any = data;
     if (url) {
       jsonData = await request.get(url);
     }
@@ -46,12 +46,24 @@ export default class OpenApiTool {
       jsonData = JSON.parse(data);
     }
 
+    const genericFields = options?.genericFields;
+
+    if (genericFields && genericFields.length > 0) {
+      traverseAndReplace(jsonData, genericFields);
+      if (jsonData.definitions) {
+        jsonData.definitions = replaceKeys(jsonData.definitions, genericFields);
+      }
+      if (jsonData.components?.schemas) {
+        jsonData.components.schemas = replaceKeys(jsonData.components.schemas, genericFields);
+      }
+    }
+
     return getOpenApi(jsonData);
   }
 
   /** 生成Service文件 */
   public async generateService(options: ServiceGeneratorOptions) {
-    const openapi = await this.getOpenApi();
+    const openapi = await this.getOpenApi(options);
     await generateService(openapi, options);
   }
 

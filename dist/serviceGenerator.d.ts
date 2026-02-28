@@ -5,6 +5,7 @@ export interface ServiceGeneratorOptions {
     importText?: string;
     outputDir: string;
     typescript?: boolean;
+    genericFields?: string[];
     format?: (openapi: OpenApi) => OpenApi;
 }
 declare const generateService: (originalOpenApi: OpenApi, options: ServiceGeneratorOptions) => Promise<void>;

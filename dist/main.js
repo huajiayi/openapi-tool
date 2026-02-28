@@ -49,6 +49,50 @@ const blue = (str) => {
 const isString = (obj) => {
     return Object.prototype.toString.call(obj) === '[object String]';
 };
+const normalizeGenerics = (name, genericFields) => {
+    if (!genericFields || genericFields.length === 0) {
+        return name;
+    }
+    let currentName = name;
+    for (const wrapper of genericFields) {
+        if (currentName.startsWith(wrapper) && currentName !== wrapper) {
+            currentName = currentName.substring(wrapper.length);
+            return `${wrapper}«${normalizeGenerics(currentName, genericFields)}»`;
+        }
+    }
+    return name;
+};
+const traverseAndReplace = (obj, genericFields) => {
+    if (!obj || typeof obj !== 'object') {
+        return;
+    }
+    if (Array.isArray(obj)) {
+        obj.forEach(item => traverseAndReplace(item, genericFields));
+        return;
+    }
+    for (const key of Object.keys(obj)) {
+        if (key === '$ref' && typeof obj[key] === 'string') {
+            const parts = obj[key].split('/');
+            const name = parts.pop();
+            if (name) {
+                parts.push(normalizeGenerics(name, genericFields));
+                obj[key] = parts.join('/');
+            }
+        }
+        else {
+            traverseAndReplace(obj[key], genericFields);
+        }
+    }
+};
+const replaceKeys = (obj, genericFields) => {
+    if (!obj || typeof obj !== 'object')
+        return obj;
+    const newObj = {};
+    for (const key of Object.keys(obj)) {
+        newObj[normalizeGenerics(key, genericFields)] = obj[key];
+    }
+    return newObj;
+};
 
 var Version;
 (function (Version) {
@@ -256,7 +300,7 @@ const getApis = (data, definitions, types, version) => {
         apis.push({
             tag: api?.tags?.[0] ?? '',
             name: api?.operationId ?? '',
-            description: api?.summary ?? '',
+            description: api?.summary ?? api?.description ?? '',
             request: {
                 url: path,
                 urlText: getUrlText(path),
@@ -350,7 +394,10 @@ const spec3ToOpenApi = (data) => {
     const definitions = data.components.schemas ?? {};
     const types = getTypes(data.components.schemas ?? {});
     const apis = getApis(data.paths, definitions, types, Version.OAS3);
-    const basePath = new URL(data.servers?.[0]?.url, 'http://dummybase.com').pathname ?? '';
+    let basePath = new URL(data.servers?.[0]?.url, 'http://dummybase.com').pathname ?? '';
+    if (basePath === '/') {
+        basePath = '';
+    }
     apis.forEach(api => {
         api.request.url = basePath + api.request.url;
         api.request.urlText = basePath + api.request.urlText;
@@ -455,7 +502,7 @@ class OpenApiTool {
     static use(plugin, options) {
         plugins.push({ plugin, options });
     }
-    async getOpenApi() {
+    async getOpenApi(options) {
         const { data, url } = this.options;
         let jsonData = data;
         if (url) {
@@ -464,10 +511,20 @@ class OpenApiTool {
         if (data && isString(data)) {
             jsonData = JSON.parse(data);
         }
+        const genericFields = options?.genericFields;
+        if (genericFields && genericFields.length > 0) {
+            traverseAndReplace(jsonData, genericFields);
+            if (jsonData.definitions) {
+                jsonData.definitions = replaceKeys(jsonData.definitions, genericFields);
+            }
+            if (jsonData.components?.schemas) {
+                jsonData.components.schemas = replaceKeys(jsonData.components.schemas, genericFields);
+            }
+        }
         return getOpenApi(jsonData);
     }
     async generateService(options) {
-        const openapi = await this.getOpenApi();
+        const openapi = await this.getOpenApi(options);
         await generateService(openapi, options);
     }
     registerPlugins(plugins) {

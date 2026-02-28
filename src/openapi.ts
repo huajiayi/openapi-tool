@@ -88,7 +88,6 @@ const getType = (param?: any, hasGenerics?: boolean): string => {
     }
     return type;
   }
-  
 
   const originalRef = getOriginalRef(param.$ref);
   const { type } = param;
@@ -131,7 +130,7 @@ const getType = (param?: any, hasGenerics?: boolean): string => {
   if (type === 'boolean') {
     return 'boolean';
   }
-  if (type === 'object') {   
+  if (type === 'object') {
     return hasGenerics ? 'T' : param.originalRef ?? 'any';
   }
   if (type === 'array') {
@@ -234,7 +233,7 @@ const getApis = (
     if (originalRef) {
       const type = originalRef?.replace(/«/g, '<').replace(/»/g, '>');
       const deps = getAllDeps(type);
-      
+
       // 如果泛型Type没有内部泛型，填充一个<any>
       if (deps.length <= 1 && generics?.includes(type ?? '')) {
         return type + '<any>';
@@ -249,7 +248,7 @@ const getApis = (
       const depMap = new Map();
       depMap.set('List', 'Array');
       for (let i = 0; i < deps.length; i++) {
-        if(depMap.has(deps[i])) {
+        if (depMap.has(deps[i])) {
           deps[i] = depMap.get(deps[i]);
           continue;
         }
@@ -258,7 +257,7 @@ const getApis = (
           deps[i] = 'any';
         }
       }
-      
+
       return toGenerics(deps);
     }
 
@@ -313,7 +312,7 @@ const getApis = (
           required: false,
         });
       }
-      
+
       if (api?.requestBody) {
         parseRequestBody(api?.requestBody);
       }
@@ -322,7 +321,7 @@ const getApis = (
     apis.push({
       tag: api?.tags?.[0] ?? '',
       name: api?.operationId ?? '',
-      description: api?.summary ?? '',
+      description: api?.summary ?? api?.description ?? '',
       request: {
         url: path,
         urlText: getUrlText(path),
@@ -348,16 +347,16 @@ const getApis = (
 
   Object.keys(data).forEach((path: string) => {
     const methods = data[path];
-    if(methods.get) {
+    if (methods.get) {
       parseOperation(path, 'get', methods.get);
     }
-    if(methods.post) {
+    if (methods.post) {
       parseOperation(path, 'post', methods.post);
     }
-    if(methods.put) {
+    if (methods.put) {
       parseOperation(path, 'put', methods.put);
     }
-    if(methods.delete) {
+    if (methods.delete) {
       parseOperation(path, 'delete', methods.delete);
     }
   });
@@ -434,7 +433,10 @@ export const spec3ToOpenApi = (data: Spec3): OpenApi => {
   const definitions = data.components.schemas ?? {};
   const types = getTypes(data.components.schemas ?? {});
   const apis = getApis(data.paths, definitions, types, Version.OAS3);
-  const basePath = new URL(data.servers?.[0]?.url, 'http://dummybase.com').pathname ?? '';
+  let basePath = new URL(data.servers?.[0]?.url, 'http://dummybase.com').pathname ?? '';
+  if (basePath === '/') {
+    basePath = '';
+  }
   apis.forEach(api => {
     api.request.url = basePath + api.request.url;
     api.request.urlText = basePath + api.request.urlText;

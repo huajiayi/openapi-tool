@@ -16,6 +16,7 @@ export interface ServiceGeneratorOptions {
   importText?: string;
   outputDir: string;
   typescript?: boolean;
+  genericFields?: string[];
   format?: (openapi: OpenApi) => OpenApi;
 }
 
@@ -31,26 +32,27 @@ const renderFile = (file: string, data: any): Promise<string> => {
 };
 
 const generateService = async (originalOpenApi: OpenApi, options: ServiceGeneratorOptions) => {
-  const {template = 'umi-request', importText = '', outputDir, typescript = false} = options;
+  const { template = 'umi-request', importText = '', outputDir, typescript = false } = options;
   if (!outputDir) {
     throw new Error('please input outputDir!');
   }
 
   const templates = ['umi-request', 'axios'];
-  if(!templates.includes(template)) {
+  if (!templates.includes(template)) {
     throw new Error(`oops, there is no template of ${template} so far, you can open an issue at https://github.com/huajiayi/openapi-tool/issues.`);
   }
 
   // 如果有format，格式化openapi
   let openapi: OpenApi = JSON.parse(JSON.stringify(originalOpenApi));
-  const {format} = options;
-  if(format) {
+  const { format } = options;
+
+  if (format) {
     openapi = format(openapi);
   }
   const { types, apis } = openapi;
 
   // 生成type文件
-  if(typescript) {
+  if (typescript) {
     const filePath = resolve(
       __dirname, // 这里的__dirname指向dist
       '../',
@@ -60,7 +62,7 @@ const generateService = async (originalOpenApi: OpenApi, options: ServiceGenerat
     );
     const service = await renderFile(filePath, { types });
     const output = resolve(outputDir, 'typings.ts');
-    if(!fs.existsSync(outputDir)) {
+    if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir);
     }
     fs.writeFileSync(output, service);
@@ -70,7 +72,7 @@ const generateService = async (originalOpenApi: OpenApi, options: ServiceGenerat
   // 把api按tag分组
   const tagMap = new Map<string, API[]>();
   apis.forEach(api => {
-    if(!tagMap.has(api.tag)) {
+    if (!tagMap.has(api.tag)) {
       tagMap.set(api.tag, []);
     }
     tagMap.get(api.tag)?.push(api)
@@ -113,7 +115,7 @@ const generateService = async (originalOpenApi: OpenApi, options: ServiceGenerat
         }
       });
     });
-    
+
     const service = await renderFile(filePath, { importText, deps, apis, typescript });
     const fileSuffix = typescript ? 'ts' : 'js';
     const output = resolve(outputDir, `${tag}.${fileSuffix}`);
