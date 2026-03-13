@@ -342,7 +342,7 @@ const getTypeParams = (properties, hasGenerics, lastDep) => {
         const param = properties[property];
         const $ref = param.items?.$ref ?? param.$ref;
         let type = getType(param, hasGenerics);
-        if (type === 'T' && !$ref?.includes(lastDep)) {
+        if (type === 'T' && $ref && !$ref?.includes(lastDep)) {
             type = getOriginalRef($ref);
         }
         return {
